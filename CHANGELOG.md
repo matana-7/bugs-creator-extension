@@ -2,6 +2,53 @@
 
 All notable changes to the Bug Reporter extension will be documented in this file.
 
+## [1.1.1] - 2025-11-12
+
+### 🚨 CRITICAL FIXES
+
+Fixed three blocking issues that prevented core functionality from working.
+
+#### Fixed
+- **Screenshot capture not working** - Rewrote tab detection to find correct website tab instead of extension pages
+- **Create Bug button doing nothing** - Added comprehensive error handling, loading states, and user feedback
+- **Monday.com connection failing silently** - Added logging throughout API calls and proper error display
+
+#### Added
+- Comprehensive console logging for debugging
+- Error banner UI component in create-bug page
+- Loading spinner in submit button
+- User-friendly error messages for all failure scenarios
+- Better validation before API calls
+
+#### Changed
+- Tab detection now excludes all extension pages automatically
+- Error messages are contextual and actionable
+- All operations provide visual feedback to users
+
+#### Technical
+- Added `showError()` and `hideError()` helper functions
+- Enhanced `chrome.runtime.lastError` checking
+- Logging in `monday-api.js` query method
+- Logging in background message handlers
+- Better state management during async operations
+
+## [1.1.0] - 2025-11-12
+
+### Added
+- Title field (required) that maps to Monday.com item name
+- Search functionality in popup with 250ms debounce
+- Bold section labels in Monday updates using **Label:** format
+
+### Changed
+- File upload flow with retry logic (3 attempts, exponential backoff)
+- Screenshot capture workflow to exclude extension UI
+- Form state preservation across screenshot workflow
+
+### Fixed
+- File attachments now upload reliably to Monday.com
+- MIME type detection for uploads
+- Screenshot never captures extension popup anymore
+
 ## [1.0.1] - 2025-11-12
 
 ### Fixed

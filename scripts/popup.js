@@ -58,7 +58,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   async function loadRecentBugs() {
     try {
+      console.log('Loading recent bugs...');
       const settings = await chrome.storage.sync.get(['mondayToken', 'selectedBoardId', 'selectedGroupId']);
+      
+      console.log('Settings loaded:', {
+        hasToken: !!settings.mondayToken,
+        boardId: settings.selectedBoardId,
+        groupId: settings.selectedGroupId
+      });
       
       if (!settings.mondayToken || !settings.selectedBoardId || !settings.selectedGroupId) {
         bugsList.innerHTML = '<div class="empty-state">Connect to Monday.com in settings to view bugs</div>';
@@ -73,20 +80,40 @@ document.addEventListener('DOMContentLoaded', async () => {
       chrome.runtime.sendMessage(
         { action: 'fetchRecentBugs' },
         (response) => {
-          if (response.success) {
+          console.log('Received bugs response:', response);
+          
+          if (chrome.runtime.lastError) {
+            console.error('Runtime error loading bugs:', chrome.runtime.lastError);
+            bugsList.innerHTML = `<div class="error">Error: ${chrome.runtime.lastError.message}</div>`;
+            resultsCount.textContent = '';
+            return;
+          }
+          
+          if (response && response.success) {
+            console.log('Bugs loaded successfully:', response.bugs?.length || 0);
             allBugs = response.bugs || [];
             filteredBugs = allBugs;
             displayBugs(filteredBugs);
             updateResultsCount();
           } else {
-            bugsList.innerHTML = `<div class="error">Error loading bugs: ${response.error}</div>`;
+            const errorMsg = response ? response.error : 'No response received';
+            console.error('Failed to load bugs:', errorMsg);
+            
+            let displayMessage = errorMsg;
+            if (errorMsg.includes('token')) {
+              displayMessage = 'Authentication error. Please check your Monday.com token in settings.';
+            } else if (errorMsg.includes('board')) {
+              displayMessage = 'Board not found. Please select a valid board in settings.';
+            }
+            
+            bugsList.innerHTML = `<div class="error">Error: ${displayMessage}</div>`;
             resultsCount.textContent = '';
           }
         }
       );
     } catch (error) {
       console.error('Error loading bugs:', error);
-      bugsList.innerHTML = '<div class="error">Failed to load bugs</div>';
+      bugsList.innerHTML = `<div class="error">Failed to load bugs: ${error.message}</div>`;
       resultsCount.textContent = '';
     }
   }

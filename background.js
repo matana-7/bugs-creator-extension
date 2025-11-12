@@ -172,20 +172,36 @@ async function handleCreateBug(message, sendResponse) {
 
 async function handleFetchRecentBugs(message, sendResponse) {
   try {
+    console.log('Handling fetchRecentBugs request...');
     const settings = await chrome.storage.sync.get(['mondayToken', 'selectedBoardId', 'selectedGroupId']);
     
+    console.log('Settings for fetch:', {
+      hasToken: !!settings.mondayToken,
+      boardId: settings.selectedBoardId,
+      groupId: settings.selectedGroupId
+    });
+    
     if (!settings.mondayToken) {
-      sendResponse({ success: false, error: 'Monday.com not connected' });
+      console.error('No Monday token found');
+      sendResponse({ success: false, error: 'Monday.com not connected. Please configure your API token in settings.' });
+      return;
+    }
+    
+    if (!settings.selectedBoardId || !settings.selectedGroupId) {
+      console.error('No board/group selected');
+      sendResponse({ success: false, error: 'Please select a board and group in settings' });
       return;
     }
     
     mondayAPI.setToken(settings.mondayToken);
     
+    console.log('Fetching bugs from Monday...');
     const bugs = await mondayAPI.fetchRecentItems(
       settings.selectedBoardId,
       settings.selectedGroupId
     );
     
+    console.log('Bugs fetched successfully:', bugs.length);
     sendResponse({ success: true, bugs });
   } catch (error) {
     console.error('Fetch bugs failed:', error);

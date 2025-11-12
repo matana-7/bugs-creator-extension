@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Bug Reporter for Monday.com",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Report bugs directly from your browser to Monday.com with HAR capture, screenshots, and annotations",
   "permissions": [
     "activeTab",

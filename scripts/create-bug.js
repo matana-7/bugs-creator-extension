@@ -51,12 +51,33 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Load boards
   await loadBoards();
 
+  // Error banner handling
+  const errorBanner = document.getElementById('errorBanner');
+  const errorText = document.getElementById('errorText');
+  const errorClose = document.getElementById('errorClose');
+  
+  errorClose.addEventListener('click', () => {
+    errorBanner.style.display = 'none';
+  });
+
+  function showError(message) {
+    console.error('Error:', message);
+    errorText.textContent = message;
+    errorBanner.style.display = 'flex';
+  }
+
+  function hideError() {
+    errorBanner.style.display = 'none';
+  }
+
   // Event listeners
   closeBtn.addEventListener('click', () => window.close());
   cancelBtn.addEventListener('click', () => window.close());
 
   bugForm.addEventListener('submit', async (e) => {
     e.preventDefault();
+    console.log('Form submitted');
+    hideError();
     await createBug();
   });
 
@@ -178,13 +199,44 @@ document.addEventListener('DOMContentLoaded', async () => {
       screenshotBtn.disabled = true;
       screenshotBtn.textContent = 'Capturing...';
 
-      // Get active tab BEFORE closing this window
-      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      // Get ALL tabs and find the one that's NOT create-bug or extension pages
+      const allTabs = await chrome.tabs.query({ currentWindow: true });
+      const createBugUrl = chrome.runtime.getURL('create-bug.html');
+      const annotateUrl = chrome.runtime.getURL('annotate.html');
+      const popupUrl = chrome.runtime.getURL('popup.html');
+      
+      // Find the actual website tab (not extension pages)
+      let targetTab = allTabs.find(tab => 
+        !tab.url.startsWith(createBugUrl) && 
+        !tab.url.startsWith(annotateUrl) &&
+        !tab.url.startsWith(popupUrl) &&
+        !tab.url.startsWith('chrome://') &&
+        !tab.url.startsWith('chrome-extension://')
+      );
+
+      // If no suitable tab found, use the most recently active non-extension tab
+      if (!targetTab) {
+        const recentTabs = await chrome.tabs.query({ });
+        targetTab = recentTabs.find(tab => 
+          !tab.url.startsWith('chrome://') && 
+          !tab.url.startsWith('chrome-extension://')
+        );
+      }
+
+      if (!targetTab) {
+        alert('No suitable tab found to capture. Please navigate to a website first.');
+        screenshotBtn.disabled = false;
+        screenshotBtn.textContent = 'Take Screenshot';
+        return;
+      }
+
+      console.log('Capturing screenshot from tab:', targetTab.id, targetTab.url);
 
       // Store state to resume after screenshot
       await chrome.storage.local.set({
         screenshotInProgress: true,
         returnToCreateBug: true,
+        targetTabId: targetTab.id,
         createBugState: {
           title: document.getElementById('title').value,
           platform: document.getElementById('platform').value,
@@ -200,31 +252,39 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       });
 
-      // Close this window/tab to get it out of the way
-      // The background script will handle the capture and open annotation
+      // Send message to background to capture screenshot
       chrome.runtime.sendMessage(
-        { action: 'captureScreenshot', tabId: tab.id },
+        { action: 'captureScreenshot', tabId: targetTab.id },
         (response) => {
-          // This callback might not run if window closes
+          if (chrome.runtime.lastError) {
+            console.error('Runtime error:', chrome.runtime.lastError);
+            alert('Failed to capture screenshot: ' + chrome.runtime.lastError.message);
+            screenshotBtn.disabled = false;
+            screenshotBtn.textContent = 'Take Screenshot';
+            chrome.storage.local.remove(['screenshotInProgress', 'returnToCreateBug', 'targetTabId']);
+            return;
+          }
+          
           if (response && !response.success) {
             alert('Failed to capture screenshot: ' + response.error);
             screenshotBtn.disabled = false;
             screenshotBtn.textContent = 'Take Screenshot';
-            chrome.storage.local.remove(['screenshotInProgress', 'returnToCreateBug']);
+            chrome.storage.local.remove(['screenshotInProgress', 'returnToCreateBug', 'targetTabId']);
+          } else {
+            // Success - close this tab after a moment
+            setTimeout(() => {
+              window.close();
+            }, 100);
           }
         }
       );
-
-      // Give message time to send, then close
-      setTimeout(() => {
-        window.close();
-      }, 100);
       
     } catch (error) {
       console.error('Screenshot error:', error);
+      alert('Screenshot error: ' + error.message);
       screenshotBtn.disabled = false;
       screenshotBtn.textContent = 'Take Screenshot';
-      chrome.storage.local.remove(['screenshotInProgress', 'returnToCreateBug']);
+      chrome.storage.local.remove(['screenshotInProgress', 'returnToCreateBug', 'targetTabId']);
     }
   }
 
@@ -360,8 +420,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   async function createBug() {
     try {
+      console.log('Creating bug...');
+      
+      // Show loading state
       submitBtn.disabled = true;
-      submitBtn.textContent = 'Creating...';
+      document.getElementById('submitBtnText').textContent = 'Creating...';
+      document.getElementById('submitSpinner').style.display = 'inline-block';
 
       // Validate form
       const title = document.getElementById('title').value.trim();
@@ -370,16 +434,18 @@ document.addEventListener('DOMContentLoaded', async () => {
       
       if (!title) {
         document.getElementById('titleError').style.display = 'block';
-        alert('Title is required');
+        showError('Title is required');
         submitBtn.disabled = false;
-        submitBtn.textContent = 'Create & Upload';
+        document.getElementById('submitBtnText').textContent = 'Create & Upload';
+        document.getElementById('submitSpinner').style.display = 'none';
         return;
       }
       
       if (!description || !stepsToReproduce) {
-        alert('Please fill in required fields (Description and Steps to Reproduce)');
+        showError('Please fill in required fields (Description and Steps to Reproduce)');
         submitBtn.disabled = false;
-        submitBtn.textContent = 'Create & Upload';
+        document.getElementById('submitBtnText').textContent = 'Create & Upload';
+        document.getElementById('submitSpinner').style.display = 'none';
         return;
       }
 
@@ -388,11 +454,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       const groupId = groupSelect.value;
       
       if (!boardId || !groupId) {
-        alert('Please select a board and group');
+        showError('Please select a board and group from the dropdowns');
         submitBtn.disabled = false;
-        submitBtn.textContent = 'Create & Upload';
+        document.getElementById('submitBtnText').textContent = 'Create & Upload';
+        document.getElementById('submitSpinner').style.display = 'none';
         return;
       }
+
+      console.log('Validation passed, creating bug with:', { title, boardId, groupId });
 
       // Save board/group selection
       await chrome.storage.sync.set({
@@ -412,14 +481,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         expectedResult: document.getElementById('expectedResult').value
       };
 
+      console.log('Bug data:', bugData);
+      console.log('Attachments:', attachedFiles.length);
+
       // Capture HAR if enabled
       if (autoAttachHAR.checked) {
+        console.log('Capturing HAR...');
         await captureHAR();
       }
 
       // Show progress
       document.getElementById('uploadProgress').style.display = 'block';
       updateProgress(30, 'Creating bug item...');
+
+      console.log('Sending message to background...');
 
       // Create bug via background script
       chrome.runtime.sendMessage(
@@ -429,13 +504,26 @@ document.addEventListener('DOMContentLoaded', async () => {
           attachments: attachedFiles
         },
         (response) => {
-          if (response.success) {
+          console.log('Received response from background:', response);
+          
+          if (chrome.runtime.lastError) {
+            console.error('Runtime error:', chrome.runtime.lastError);
+            showError('Extension error: ' + chrome.runtime.lastError.message);
+            submitBtn.disabled = false;
+            document.getElementById('submitBtnText').textContent = 'Create & Upload';
+            document.getElementById('submitSpinner').style.display = 'none';
+            document.getElementById('uploadProgress').style.display = 'none';
+            return;
+          }
+          
+          if (response && response.success) {
+            console.log('Bug created successfully!', response.item);
             updateProgress(100, 'Bug created successfully!');
             
             // Check if there were any file upload issues
-            if (response.uploadResults && response.uploadResults.failed.length > 0) {
+            if (response.uploadResults && response.uploadResults.failed && response.uploadResults.failed.length > 0) {
               const failedFiles = response.uploadResults.failed.map(f => f.name).join(', ');
-              alert(`Bug created, but some files failed to upload:\n${failedFiles}\n\nPlease upload them manually.`);
+              showError(`Bug created, but some files failed to upload: ${failedFiles}. Please upload them manually.`);
             }
             
             setTimeout(() => {
@@ -447,26 +535,35 @@ document.addEventListener('DOMContentLoaded', async () => {
             }, 1500);
           } else {
             // Show detailed error message
-            let errorMessage = 'Failed to create bug: ' + response.error;
+            const errorMsg = response ? response.error : 'Unknown error - no response received';
+            console.error('Bug creation failed:', errorMsg);
             
-            if (response.error.includes('File too large')) {
-              errorMessage += '\n\nTip: Monday.com limits file sizes to 500MB. Try compressing the file or removing some attachments.';
-            } else if (response.error.includes('Upload failed')) {
-              errorMessage += '\n\nTip: Check your internet connection and try again. You can also create the bug without attachments first.';
+            let displayMessage = errorMsg;
+            
+            if (errorMsg.includes('token not set') || errorMsg.includes('not connected')) {
+              displayMessage = 'Not connected to Monday.com. Please configure your API token in settings.';
+            } else if (errorMsg.includes('File too large')) {
+              displayMessage = 'File too large. Monday.com limits files to 500MB. Please compress or remove large files.';
+            } else if (errorMsg.includes('Upload failed')) {
+              displayMessage = 'Upload failed. Check your internet connection and try again.';
+            } else if (errorMsg.includes('board')) {
+              displayMessage = 'Board or group not found. Please select a valid board and group in settings.';
             }
             
-            alert(errorMessage);
+            showError(displayMessage);
             submitBtn.disabled = false;
-            submitBtn.textContent = 'Create & Upload';
+            document.getElementById('submitBtnText').textContent = 'Create & Upload';
+            document.getElementById('submitSpinner').style.display = 'none';
             document.getElementById('uploadProgress').style.display = 'none';
           }
         }
       );
     } catch (error) {
       console.error('Error creating bug:', error);
-      alert('Failed to create bug: ' + error.message);
+      showError('Failed to create bug: ' + error.message);
       submitBtn.disabled = false;
-      submitBtn.textContent = 'Create & Upload';
+      document.getElementById('submitBtnText').textContent = 'Create & Upload';
+      document.getElementById('submitSpinner').style.display = 'none';
       document.getElementById('uploadProgress').style.display = 'none';
     }
   }

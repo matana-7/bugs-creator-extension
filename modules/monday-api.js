@@ -13,30 +13,52 @@ export class MondayAPI {
 
   async query(query, variables = {}) {
     if (!this.token) {
+      console.error('Monday.com token not set');
       throw new Error('Monday.com token not set');
     }
 
-    const response = await fetch(this.apiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': this.token,
-        'API-Version': '2024-01'
-      },
-      body: JSON.stringify({ query, variables })
+    console.log('Monday API query:', { 
+      query: query.substring(0, 100) + '...', 
+      variables 
     });
 
-    if (!response.ok) {
-      throw new Error(`Monday API error: ${response.statusText}`);
-    }
+    try {
+      const response = await fetch(this.apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': this.token,
+          'API-Version': '2024-01'
+        },
+        body: JSON.stringify({ query, variables })
+      });
 
-    const result = await response.json();
-    
-    if (result.errors) {
-      throw new Error(`Monday GraphQL error: ${result.errors[0].message}`);
-    }
+      console.log('Monday API response status:', response.status, response.statusText);
 
-    return result.data;
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Monday API HTTP error:', response.status, errorText);
+        throw new Error(`Monday API error (${response.status}): ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      console.log('Monday API result:', result);
+      
+      if (result.errors && result.errors.length > 0) {
+        console.error('Monday GraphQL errors:', result.errors);
+        throw new Error(`Monday GraphQL error: ${result.errors[0].message}`);
+      }
+
+      if (!result.data) {
+        console.error('No data in Monday response:', result);
+        throw new Error('No data returned from Monday API');
+      }
+
+      return result.data;
+    } catch (error) {
+      console.error('Monday API query failed:', error);
+      throw error;
+    }
   }
 
   async fetchWorkspaces() {

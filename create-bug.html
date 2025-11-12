@@ -140,6 +140,11 @@
         </div>
         <span class="progress-text" id="progressText">Uploading...</span>
       </div>
+      <div class="error-banner" id="errorBanner" style="display: none;">
+        <span class="error-icon">⚠️</span>
+        <span class="error-text" id="errorText"></span>
+        <button class="error-close" id="errorClose">×</button>
+      </div>
       <div class="footer-buttons">
         <button type="button" class="cancel-btn" id="cancelBtn">Cancel</button>
         <button type="submit" class="submit-btn" id="submitBtn" form="bugForm">
@@ -147,7 +152,8 @@
             <path d="M22 2L11 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
-          Create & Upload
+          <span id="submitBtnText">Create & Upload</span>
+          <span class="spinner" id="submitSpinner" style="display: none;"></span>
         </button>
       </div>
     </div>

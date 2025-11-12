@@ -382,6 +382,60 @@ body {
   background: white;
 }
 
+/* Error Banner */
+.error-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  margin-bottom: 12px;
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 6px;
+  color: #856404;
+}
+
+.error-icon {
+  font-size: 18px;
+}
+
+.error-text {
+  flex: 1;
+  font-size: 13px;
+}
+
+.error-close {
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: #856404;
+  cursor: pointer;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  line-height: 1;
+}
+
+.error-close:hover {
+  color: #533f03;
+}
+
+/* Spinner */
+.spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-left: 8px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 .upload-progress {
   margin-bottom: 12px;
 }
