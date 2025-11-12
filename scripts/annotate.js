@@ -244,4 +244,9 @@ async function saveAnnotation() {
   
   // Close annotation window
   window.close();
+  
+  // Reopen create-bug page after a moment
+  setTimeout(() => {
+    chrome.tabs.create({ url: 'create-bug.html' });
+  }, 100);
 }

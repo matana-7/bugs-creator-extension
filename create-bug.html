@@ -18,6 +18,12 @@
       <div class="form-column">
         <form id="bugForm">
           <div class="form-group">
+            <label for="title">Title: *</label>
+            <input type="text" id="title" name="title" required placeholder="Brief bug title (e.g., Login button not responding)">
+            <span class="error-message" id="titleError" style="display: none;">Title is required</span>
+          </div>
+
+          <div class="form-group">
             <label for="platform">Platform:</label>
             <input type="text" id="platform" name="platform" placeholder="e.g., Chrome, Firefox, Edge">
           </div>

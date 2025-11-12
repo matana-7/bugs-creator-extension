@@ -85,13 +85,38 @@ async function handleCaptureScreenshot(message, sendResponse) {
   const { tabId } = message;
   
   try {
+    // Wait a moment for any popup/window to close
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    // Focus the tab to ensure it's visible
+    await chrome.tabs.update(tabId, { active: true });
+    
+    // Wait another moment for tab to be fully focused
+    await new Promise(resolve => setTimeout(resolve, 200));
+    
+    // Capture the visible tab (now without any extension popup)
     const screenshot = await chrome.tabs.captureVisibleTab(null, {
       format: 'png'
     });
     
-    sendResponse({ success: true, screenshot });
+    // Store screenshot and open annotation page
+    await chrome.storage.local.set({ 
+      pendingScreenshot: screenshot,
+      screenshotInProgress: false
+    });
+    
+    // Open annotation page in a new window
+    chrome.windows.create({
+      url: 'annotate.html',
+      type: 'popup',
+      width: 1200,
+      height: 800
+    });
+    
+    sendResponse({ success: true });
   } catch (error) {
     console.error('Screenshot capture failed:', error);
+    await chrome.storage.local.set({ screenshotInProgress: false });
     sendResponse({ success: false, error: error.message });
   }
 }
@@ -125,11 +150,12 @@ async function handleCreateBug(message, sendResponse) {
     
     // Show notification
     try {
+      const bugTitle = bugData.title || bugData.description || 'New Bug';
       chrome.notifications.create({
         type: 'basic',
         iconUrl: 'icons/icon48.png',
         title: 'Bug Reported Successfully',
-        message: `Bug "${bugData.description}" has been created on Monday.com`,
+        message: `Bug "${bugTitle}" has been created on Monday.com`,
         priority: 2
       });
     } catch (notifError) {

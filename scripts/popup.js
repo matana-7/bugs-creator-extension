@@ -1,17 +1,31 @@
 // Popup Script - Main interface for viewing bugs and creating new ones
 
+let allBugs = []; // Store all bugs for client-side filtering
+let filteredBugs = []; // Currently displayed bugs
+
 document.addEventListener('DOMContentLoaded', async () => {
   const settingsBtn = document.getElementById('settingsBtn');
   const createBugBtn = document.getElementById('createBugBtn');
   const bugsList = document.getElementById('bugsList');
   const statusIndicator = document.getElementById('statusIndicator');
   const statusText = document.getElementById('statusText');
+  const searchInput = document.getElementById('searchInput');
+  const resultsCount = document.getElementById('resultsCount');
 
   // Check connection status
   await checkConnectionStatus();
 
   // Load recent bugs
   await loadRecentBugs();
+
+  // Search functionality with debounce
+  let searchTimeout;
+  searchInput.addEventListener('input', (e) => {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+      filterBugs(e.target.value);
+    }, 250); // 250ms debounce
+  });
 
   // Event listeners
   settingsBtn.addEventListener('click', () => {
@@ -48,25 +62,63 @@ document.addEventListener('DOMContentLoaded', async () => {
       
       if (!settings.mondayToken || !settings.selectedBoardId || !settings.selectedGroupId) {
         bugsList.innerHTML = '<div class="empty-state">Connect to Monday.com in settings to view bugs</div>';
+        resultsCount.textContent = '';
         return;
       }
 
       bugsList.innerHTML = '<div class="loading">Loading bugs...</div>';
+      resultsCount.textContent = '';
 
       // Request bugs from background script
       chrome.runtime.sendMessage(
         { action: 'fetchRecentBugs' },
         (response) => {
           if (response.success) {
-            displayBugs(response.bugs);
+            allBugs = response.bugs || [];
+            filteredBugs = allBugs;
+            displayBugs(filteredBugs);
+            updateResultsCount();
           } else {
             bugsList.innerHTML = `<div class="error">Error loading bugs: ${response.error}</div>`;
+            resultsCount.textContent = '';
           }
         }
       );
     } catch (error) {
       console.error('Error loading bugs:', error);
       bugsList.innerHTML = '<div class="error">Failed to load bugs</div>';
+      resultsCount.textContent = '';
+    }
+  }
+
+  function filterBugs(searchTerm) {
+    if (!searchTerm || searchTerm.trim() === '') {
+      // No search term, show all bugs
+      filteredBugs = allBugs;
+    } else {
+      // Filter bugs by title, status, and date
+      const term = searchTerm.toLowerCase();
+      filteredBugs = allBugs.filter(bug => {
+        const title = bug.name ? bug.name.toLowerCase() : '';
+        const statusColumn = bug.column_values?.find(col => col.id === 'status');
+        const status = statusColumn ? statusColumn.text.toLowerCase() : '';
+        const date = new Date(bug.created_at).toLocaleDateString().toLowerCase();
+        
+        return title.includes(term) || status.includes(term) || date.includes(term);
+      });
+    }
+    
+    displayBugs(filteredBugs);
+    updateResultsCount();
+  }
+
+  function updateResultsCount() {
+    if (allBugs.length === 0) {
+      resultsCount.textContent = '';
+    } else if (filteredBugs.length === allBugs.length) {
+      resultsCount.textContent = `${allBugs.length} bug${allBugs.length !== 1 ? 's' : ''}`;
+    } else {
+      resultsCount.textContent = `${filteredBugs.length} of ${allBugs.length}`;
     }
   }
 

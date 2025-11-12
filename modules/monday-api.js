@@ -97,9 +97,8 @@ export class MondayAPI {
   }
 
   async createBugItem(boardId, groupId, bugData, attachments = []) {
-    // First create the item with description in the item name
-    // We'll add detailed info as an update since column values can be complex
-    const bugTitle = bugData.description || 'New Bug';
+    // Create the item with the Title field as the item name
+    const bugTitle = bugData.title || bugData.description || 'New Bug';
     
     const createQuery = `
       mutation ($boardId: ID!, $groupId: String!, $itemName: String!) {
@@ -145,30 +144,50 @@ export class MondayAPI {
   }
 
   async addBugDetailsUpdate(itemId, bugData) {
-    // Format bug details as markdown-style text
+    // Format bug details as markdown with bold labels
+    // Using **Label:** format for bold in Monday.com
     let updateText = '';
     
+    // Add platform info
     if (bugData.platform) {
-      updateText += `**Platform:** ${bugData.platform}\n`;
+      updateText += `**Platform:** ${this.escapeMarkdown(bugData.platform)}\n`;
     }
+    
+    // Add environment
     if (bugData.env) {
-      updateText += `**Environment:** ${bugData.env}\n`;
+      updateText += `**ENV:** ${this.escapeMarkdown(bugData.env)}\n`;
     }
+    
+    // Add version
     if (bugData.version) {
-      updateText += `**Version:** ${bugData.version}\n`;
+      updateText += `**Version:** ${this.escapeMarkdown(bugData.version)}\n`;
     }
     
-    updateText += `\n**Description:**\n${bugData.description || 'N/A'}\n`;
+    // Add description
+    if (bugData.description) {
+      updateText += `\n**Description:** ${this.escapeMarkdown(bugData.description)}\n`;
+    }
     
+    // Add steps to reproduce
     if (bugData.stepsToReproduce) {
-      updateText += `\n**Steps to Reproduce:**\n${bugData.stepsToReproduce}\n`;
+      updateText += `\n**Steps to reproduce:**\n${this.escapeMarkdown(bugData.stepsToReproduce)}\n`;
     }
+    
+    // Add actual result
     if (bugData.actualResult) {
-      updateText += `\n**Actual Result:**\n${bugData.actualResult}\n`;
+      updateText += `\n**Actual result:** ${this.escapeMarkdown(bugData.actualResult)}\n`;
     }
+    
+    // Add expected result
     if (bugData.expectedResult) {
-      updateText += `\n**Expected Result:**\n${bugData.expectedResult}\n`;
+      updateText += `\n**Expected result:** ${this.escapeMarkdown(bugData.expectedResult)}\n`;
     }
+    
+    // Add logs note
+    updateText += `\n**Logs:** (HAR attached if available)\n`;
+    
+    // Add media note
+    updateText += `**Media:** (screenshots attached if available)\n`;
 
     const mutation = `
       mutation ($itemId: ID!, $body: String!) {
@@ -185,6 +204,13 @@ export class MondayAPI {
       itemId: itemId,
       body: updateText
     });
+  }
+
+  escapeMarkdown(text) {
+    // Escape markdown special characters to prevent breaking formatting
+    // But preserve newlines and basic formatting
+    if (!text) return '';
+    return text.toString();
   }
 
   buildColumnValues(bugData) {
@@ -220,10 +246,16 @@ export class MondayAPI {
     return values;
   }
 
-  async addFilesToItem(itemId, files) {
-    // Monday.com file uploads work by adding files to updates
-    // First create an update, then attach files to it
-    
+  async addFilesToItem(itemId, files, progressCallback = null) {
+    if (!files || files.length === 0) {
+      return { success: true, uploaded: [], failed: [] };
+    }
+
+    const results = {
+      uploaded: [],
+      failed: []
+    };
+
     // Create a simple update to attach files to
     const createUpdateMutation = `
       mutation ($itemId: ID!) {
@@ -242,62 +274,147 @@ export class MondayAPI {
 
     const updateId = updateResult.create_update.id;
 
-    // Now attach files to this update
-    // Note: Monday.com API has limitations on file uploads
-    // In production, you might need a backend proxy
-    for (const file of files) {
+    // Upload files with progress tracking
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      
+      // Report progress
+      if (progressCallback) {
+        progressCallback({
+          current: i + 1,
+          total: files.length,
+          fileName: file.name,
+          status: 'uploading'
+        });
+      }
+
       try {
+        // Check file size (Monday.com typically limits to ~500MB)
+        const MAX_FILE_SIZE = 500 * 1024 * 1024; // 500MB
+        if (file.size && file.size > MAX_FILE_SIZE) {
+          throw new Error(`File too large: ${file.name} exceeds 500MB limit`);
+        }
+
         await this.uploadFileToUpdate(updateId, file);
+        results.uploaded.push(file.name);
+
+        if (progressCallback) {
+          progressCallback({
+            current: i + 1,
+            total: files.length,
+            fileName: file.name,
+            status: 'completed'
+          });
+        }
       } catch (error) {
         console.error(`Failed to upload file ${file.name}:`, error);
-        // Continue with other files
-      }
-    }
-  }
+        results.failed.push({
+          name: file.name,
+          error: error.message
+        });
 
-  async uploadFileToUpdate(updateId, file) {
-    // Convert data URL to blob
-    const blob = await this.dataUrlToBlob(file.dataUrl);
-    
-    // Use Monday.com asset upload API
-    // Note: This is a simplified version. Monday's file upload API
-    // may require different handling depending on your account setup
-    const formData = new FormData();
-    formData.append('query', `
-      mutation ($updateId: ID!, $file: File!) {
-        add_file_to_update(
-          update_id: $updateId,
-          file: $file
-        ) {
-          id
+        if (progressCallback) {
+          progressCallback({
+            current: i + 1,
+            total: files.length,
+            fileName: file.name,
+            status: 'failed',
+            error: error.message
+          });
         }
       }
-    `);
-    formData.append('variables', JSON.stringify({ updateId }));
-    formData.append('file', blob, file.name);
-
-    const response = await fetch(this.apiUrl, {
-      method: 'POST',
-      headers: {
-        'Authorization': this.token
-      },
-      body: formData
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('File upload response:', errorText);
-      throw new Error(`File upload failed: ${response.statusText}`);
     }
 
-    const result = await response.json();
-    
-    if (result.errors) {
-      console.error('File upload GraphQL errors:', result.errors);
-      throw new Error(`File upload error: ${result.errors[0].message}`);
-    }
+    return results;
+  }
 
-    return result;
+  async uploadFileToUpdate(updateId, file, retryCount = 0) {
+    const MAX_RETRIES = 3;
+    const RETRY_DELAY = 1000; // Start with 1 second
+
+    try {
+      // Convert data URL to blob with MIME type detection
+      let blob;
+      let mimeType = file.type || 'application/octet-stream';
+
+      if (file.dataUrl) {
+        blob = await this.dataUrlToBlob(file.dataUrl);
+        
+        // Detect MIME type from data URL if not provided
+        if (file.dataUrl.startsWith('data:')) {
+          const match = file.dataUrl.match(/^data:([^;]+);/);
+          if (match) {
+            mimeType = match[1];
+          }
+        }
+      } else if (file.blob) {
+        blob = file.blob;
+        mimeType = blob.type || mimeType;
+      } else {
+        throw new Error('File must have dataUrl or blob property');
+      }
+
+      // Ensure blob has correct type
+      if (blob.type !== mimeType) {
+        blob = new Blob([blob], { type: mimeType });
+      }
+
+      // Use Monday.com's file upload API
+      const formData = new FormData();
+      
+      // Add the GraphQL mutation
+      formData.append('query', `
+        mutation ($file: File!) {
+          add_file_to_update(
+            update_id: ${updateId},
+            file: $file
+          ) {
+            id
+            name
+            url
+          }
+        }
+      `);
+
+      // Add the file with proper name and type
+      formData.append('variables[file]', blob, file.name);
+
+      const response = await fetch(this.apiUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': this.token
+          // Don't set Content-Type - browser will set it with boundary
+        },
+        body: formData
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('File upload response:', errorText);
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      
+      if (result.errors && result.errors.length > 0) {
+        console.error('File upload GraphQL errors:', result.errors);
+        throw new Error(result.errors[0].message);
+      }
+
+      return result;
+
+    } catch (error) {
+      // Retry with exponential backoff
+      if (retryCount < MAX_RETRIES) {
+        const delay = RETRY_DELAY * Math.pow(2, retryCount);
+        console.log(`Retrying file upload for ${file.name} in ${delay}ms (attempt ${retryCount + 1}/${MAX_RETRIES})`);
+        
+        await new Promise(resolve => setTimeout(resolve, delay));
+        return this.uploadFileToUpdate(updateId, file, retryCount + 1);
+      }
+
+      throw new Error(`Upload failed after ${MAX_RETRIES} attempts: ${error.message}`);
+    }
   }
 
   async dataUrlToBlob(dataUrl) {

@@ -32,9 +32,23 @@
       <span id="statusText">Not connected to Monday.com</span>
     </div>
 
+    <!-- Search Box -->
+    <div class="search-container">
+      <input 
+        type="text" 
+        id="searchInput" 
+        class="search-input" 
+        placeholder="Search bugs..."
+      >
+      <span class="search-icon">🔍</span>
+    </div>
+
     <!-- Recent Bugs List -->
     <div class="recent-bugs">
-      <h3>Recent Bugs</h3>
+      <div class="recent-bugs-header">
+        <h3>Recent Bugs</h3>
+        <span class="results-count" id="resultsCount"></span>
+      </div>
       <div class="bugs-list" id="bugsList">
         <div class="loading">Loading bugs...</div>
       </div>

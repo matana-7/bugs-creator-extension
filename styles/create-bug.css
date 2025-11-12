@@ -300,6 +300,15 @@ body {
   border-color: #667eea;
 }
 
+/* Error Message */
+.error-message {
+  display: block;
+  margin-top: 4px;
+  color: #dc3545;
+  font-size: 12px;
+  font-weight: 500;
+}
+
 /* Files List */
 .files-list {
   margin-top: 12px;
