@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bug Reporter Settings</title>
+  <link rel="stylesheet" href="styles/settings.css">
+</head>
+<body>
+  <div class="settings-container">
+    <header class="settings-header">
+      <h1>Bug Reporter Settings</h1>
+    </header>
+
+    <div class="settings-content">
+      <!-- Monday.com Connection -->
+      <section class="settings-section">
+        <h2>Monday.com Connection</h2>
+        <div class="connection-status" id="connectionStatus">
+          <div class="status-badge disconnected" id="statusBadge">Disconnected</div>
+        </div>
+
+        <div class="form-group">
+          <label for="mondayToken">API Token:</label>
+          <div class="input-with-button">
+            <input 
+              type="password" 
+              id="mondayToken" 
+              placeholder="Enter your Monday.com API token"
+              autocomplete="off"
+            >
+            <button type="button" class="toggle-visibility" id="toggleToken" title="Show/Hide">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M1 12C1 12 5 4 12 4C19 4 23 12 23 12C23 12 19 20 12 20C5 20 1 12 1 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+              </svg>
+            </button>
+          </div>
+          <small class="help-text">
+            Get your API token from 
+            <a href="https://monday.com/developers/v2#authentication-section" target="_blank">Monday.com Developers</a>
+          </small>
+        </div>
+
+        <div class="button-group">
+          <button type="button" class="primary-btn" id="testConnectionBtn">Test Connection</button>
+          <button type="button" class="secondary-btn" id="saveTokenBtn">Save Token</button>
+          <button type="button" class="danger-btn" id="disconnectBtn">Disconnect</button>
+        </div>
+      </section>
+
+      <!-- Board & Group Selection -->
+      <section class="settings-section">
+        <h2>Board & Group Selection</h2>
+        
+        <div class="form-group">
+          <label for="boardSelect">Default Board:</label>
+          <select id="boardSelect">
+            <option value="">Select a board...</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="groupSelect">Default Group:</label>
+          <select id="groupSelect">
+            <option value="">Select board first</option>
+          </select>
+        </div>
+
+        <button type="button" class="primary-btn" id="saveSelectionBtn">Save Selection</button>
+      </section>
+
+      <!-- HAR Capture Settings -->
+      <section class="settings-section">
+        <h2>HAR Capture Settings</h2>
+        
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input type="checkbox" id="autoAttachHAR" checked>
+            <span>Automatically attach HAR file to new bugs</span>
+          </label>
+        </div>
+
+        <div class="form-group">
+          <label for="harTimeframe">HAR Timeframe (minutes):</label>
+          <input type="number" id="harTimeframe" min="1" max="60" value="10">
+          <small class="help-text">Network traffic from the last N minutes</small>
+        </div>
+
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input type="checkbox" id="maskSensitiveHeaders" checked>
+            <span>Mask sensitive headers (Authorization, Cookie)</span>
+          </label>
+        </div>
+
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input type="checkbox" id="maskQueryStrings">
+            <span>Mask query strings in URLs</span>
+          </label>
+        </div>
+
+        <button type="button" class="primary-btn" id="saveHARSettingsBtn">Save HAR Settings</button>
+      </section>
+
+      <!-- Privacy & Consent -->
+      <section class="settings-section">
+        <h2>Privacy & Consent</h2>
+        
+        <div class="privacy-notice">
+          <h3>⚠️ Important Privacy Information</h3>
+          <p>
+            <strong>HAR Capture:</strong> When enabled, this extension captures network traffic including:
+          </p>
+          <ul>
+            <li>Request and response headers (may contain authentication tokens)</li>
+            <li>Cookies and session information</li>
+            <li>URLs with query parameters (may contain personal data)</li>
+            <li>Request and response bodies (may contain sensitive information)</li>
+          </ul>
+          <p>
+            <strong>Screenshots:</strong> May capture visible personal information on your screen.
+          </p>
+          <p>
+            We recommend enabling header masking and reviewing captured data before submitting.
+          </p>
+        </div>
+
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input type="checkbox" id="harConsent">
+            <span>I understand and consent to HAR capture</span>
+          </label>
+        </div>
+
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input type="checkbox" id="screenshotConsent" checked>
+            <span>I understand and consent to screenshot capture</span>
+          </label>
+        </div>
+
+        <button type="button" class="primary-btn" id="saveConsentBtn">Save Consent Preferences</button>
+      </section>
+
+      <!-- Advanced Settings -->
+      <section class="settings-section">
+        <h2>Advanced</h2>
+        
+        <div class="form-group">
+          <button type="button" class="danger-btn" id="clearDataBtn">Clear All Extension Data</button>
+          <small class="help-text">This will remove all settings, tokens, and cached data</small>
+        </div>
+      </section>
+    </div>
+
+    <footer class="settings-footer">
+      <p>Bug Reporter v1.0.0 | <a href="https://monday.com" target="_blank">Monday.com</a></p>
+    </footer>
+  </div>
+
+  <script src="scripts/settings.js" type="module"></script>
+</body>
+</html>

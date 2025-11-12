@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bug Reporter</title>
+  <link rel="stylesheet" href="styles/popup.css">
+</head>
+<body>
+  <div class="popup-container">
+    <!-- Header -->
+    <header class="popup-header">
+      <div class="logo">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span>Bug Reporter</span>
+      </div>
+      <button class="settings-btn" id="settingsBtn" title="Settings">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+          <path d="M12 1V5M12 19V23M4.22 4.22L7.05 7.05M16.95 16.95L19.78 19.78M1 12H5M19 12H23M4.22 19.78L7.05 16.95M16.95 7.05L19.78 4.22" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </header>
+
+    <!-- Connection Status -->
+    <div class="connection-status" id="connectionStatus">
+      <div class="status-indicator disconnected" id="statusIndicator"></div>
+      <span id="statusText">Not connected to Monday.com</span>
+    </div>
+
+    <!-- Recent Bugs List -->
+    <div class="recent-bugs">
+      <h3>Recent Bugs</h3>
+      <div class="bugs-list" id="bugsList">
+        <div class="loading">Loading bugs...</div>
+      </div>
+    </div>
+
+    <!-- Create Bug Button -->
+    <div class="popup-footer">
+      <button class="create-bug-btn" id="createBugBtn">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <line x1="12" y1="5" x2="12" y2="19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        Create a New Bug
+      </button>
+    </div>
+  </div>
+
+  <script src="scripts/popup.js" type="module"></script>
+</body>
+</html>

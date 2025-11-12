@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Bug Report</title>
+  <link rel="stylesheet" href="styles/create-bug.css">
+</head>
+<body>
+  <div class="modal-container">
+    <div class="modal-header">
+      <h2>Create Bug Report</h2>
+      <button class="close-btn" id="closeBtn">&times;</button>
+    </div>
+
+    <div class="modal-body">
+      <!-- Left Column: Bug Details Form -->
+      <div class="form-column">
+        <form id="bugForm">
+          <div class="form-group">
+            <label for="platform">Platform:</label>
+            <input type="text" id="platform" name="platform" placeholder="e.g., Chrome, Firefox, Edge">
+          </div>
+
+          <div class="form-group">
+            <label for="env">Environment:</label>
+            <input type="text" id="env" name="env" placeholder="e.g., Production, Staging, Development">
+          </div>
+
+          <div class="form-group">
+            <label for="version">Version:</label>
+            <input type="text" id="version" name="version" placeholder="e.g., 1.0.0">
+          </div>
+
+          <div class="form-group">
+            <label for="description">Description: *</label>
+            <textarea id="description" name="description" rows="3" required placeholder="Brief description of the bug"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="stepsToReproduce">Steps to Reproduce: *</label>
+            <textarea id="stepsToReproduce" name="stepsToReproduce" rows="4" required placeholder="1. Go to...&#10;2. Click on...&#10;3. See error"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="actualResult">Actual Result:</label>
+            <textarea id="actualResult" name="actualResult" rows="3" placeholder="What actually happened"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="expectedResult">Expected Result:</label>
+            <textarea id="expectedResult" name="expectedResult" rows="3" placeholder="What should have happened"></textarea>
+          </div>
+
+          <!-- Board Selection -->
+          <div class="form-group">
+            <label for="boardSelect">Monday Board:</label>
+            <select id="boardSelect" name="boardSelect">
+              <option value="">Loading boards...</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="groupSelect">Group:</label>
+            <select id="groupSelect" name="groupSelect">
+              <option value="">Select board first</option>
+            </select>
+          </div>
+        </form>
+      </div>
+
+      <!-- Right Column: Attachments -->
+      <div class="attachments-column">
+        <h3>Attachments</h3>
+
+        <!-- Auto HAR Attachment -->
+        <div class="attachment-section">
+          <div class="section-header">
+            <label class="checkbox-label">
+              <input type="checkbox" id="autoAttachHAR" checked>
+              Auto-attach HAR (Network Logs)
+            </label>
+            <span class="info-icon" title="HAR file contains last 10 minutes of network traffic. May include sensitive data.">ℹ️</span>
+          </div>
+          <div class="har-status" id="harStatus">
+            <span class="status-icon">⏳</span>
+            <span>Ready to capture</span>
+          </div>
+        </div>
+
+        <!-- Screenshot Section -->
+        <div class="attachment-section">
+          <div class="section-header">
+            <h4>Screenshots</h4>
+            <button class="screenshot-btn" id="screenshotBtn">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/>
+                <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+              </svg>
+              Take Screenshot
+            </button>
+          </div>
+          <div class="screenshots-list" id="screenshotsList">
+            <div class="empty-state">No screenshots yet</div>
+          </div>
+        </div>
+
+        <!-- File Upload Section -->
+        <div class="attachment-section">
+          <h4>Additional Files</h4>
+          <div class="drop-zone" id="dropZone">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M17 8L12 3L7 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M12 3V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <p>Drag & drop files here</p>
+            <p class="or-text">or</p>
+            <button type="button" class="browse-btn" id="browseBtn">Browse Files</button>
+            <input type="file" id="fileInput" multiple hidden>
+          </div>
+          <div class="files-list" id="filesList">
+            <!-- Uploaded files will appear here -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="modal-footer">
+      <div class="upload-progress" id="uploadProgress" style="display: none;">
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <span class="progress-text" id="progressText">Uploading...</span>
+      </div>
+      <div class="footer-buttons">
+        <button type="button" class="cancel-btn" id="cancelBtn">Cancel</button>
+        <button type="submit" class="submit-btn" id="submitBtn" form="bugForm">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M22 2L11 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Create & Upload
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="scripts/create-bug.js" type="module"></script>
+</body>
+</html>
