@@ -466,49 +466,26 @@ export class MondayAPI {
 
       console.log(`File size: ${(blob.size / 1024).toFixed(2)} KB, MIME: ${mimeType}`);
 
-      // Monday.com multipart upload format (GraphQL multipart request spec)
-      // Reference: https://github.com/jaydenseric/graphql-multipart-request-spec
+      // Monday.com uses a separate file upload endpoint (not GraphQL)
+      // They don't support GraphQL multipart uploads
+      // Instead, use their REST API: https://api.monday.com/v2/file
       
-      console.log('Uploading file using Monday.com multipart format...');
+      console.log('Uploading file to Monday.com using REST API...');
       
       const formData = new FormData();
+      formData.append('query', `mutation { add_file_to_update (update_id: ${updateId}) { id } }`);
+      formData.append('file', blob, file.name);
       
-      // 1. Operations: The GraphQL mutation with variable placeholder
-      const operations = {
-        query: `
-          mutation ($file: File!) {
-            add_file_to_update(update_id: ${updateId}, file: $file) {
-              id
-              name
-              url
-              file_extension
-              file_size
-            }
-          }
-        `,
-        variables: {
-          file: null  // Will be replaced by the actual file
-        }
-      };
+      console.log('Upload request:');
+      console.log('- Update ID:', updateId);
+      console.log('- File name:', file.name);
+      console.log('- File size:', blob.size);
+      console.log('- MIME type:', mimeType);
       
-      formData.append('operations', JSON.stringify(operations));
+      // Monday.com's file upload endpoint (different from GraphQL endpoint)
+      const fileUploadUrl = 'https://api.monday.com/v2/file';
       
-      // 2. Map: Links the file to the variable path
-      const map = {
-        "0": ["variables.file"]  // File at position "0" maps to "variables.file"
-      };
-      
-      formData.append('map', JSON.stringify(map));
-      
-      // 3. File: The actual file with key "0" (matching the map)
-      formData.append('0', blob, file.name);
-      
-      console.log('Multipart request prepared:');
-      console.log('- Operations:', JSON.stringify(operations, null, 2));
-      console.log('- Map:', JSON.stringify(map));
-      console.log('- File key: "0", name:', file.name, 'size:', blob.size);
-      
-      const response = await fetch(this.apiUrl, {
+      const response = await fetch(fileUploadUrl, {
         method: 'POST',
         headers: {
           'Authorization': this.token

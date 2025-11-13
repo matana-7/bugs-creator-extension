@@ -2,6 +2,51 @@
 
 All notable changes to the Bug Reporter extension will be documented in this file.
 
+## [1.3.4] - 2025-11-12
+
+### 🔧 Fixed - CRITICAL
+
+**File Upload - Using Monday.com's Actual File Upload Endpoint**
+
+- **BREAKING FIX**: Monday.com's GraphQL endpoint does NOT accept multipart uploads
+  - Error was: "Invalid GraphQL request - Request body must be a JSON with query"
+  - GraphQL endpoint only accepts JSON requests
+- **Correct Implementation**: Use Monday.com's separate file upload REST endpoint
+  - Endpoint: `https://api.monday.com/v2/file`
+  - Method: POST with multipart/form-data
+  - Fields: `query` (mutation) + `file` (actual file)
+- **Key Insight**: Monday.com has TWO different endpoints:
+  - `https://api.monday.com/v2` - GraphQL queries (JSON only)
+  - `https://api.monday.com/v2/file` - File uploads (multipart)
+
+**Technical Details:**
+```javascript
+// Use the file upload endpoint (not the GraphQL endpoint)
+const formData = new FormData();
+formData.append('query', 'mutation { add_file_to_update(update_id: 123) { id } }');
+formData.append('file', blob, filename);
+
+await fetch('https://api.monday.com/v2/file', {
+  method: 'POST',
+  headers: { 'Authorization': token },
+  body: formData
+});
+```
+
+**Impact:**
+- ✅ Files now upload to correct endpoint
+- ✅ No more "Invalid GraphQL request" errors
+- ✅ Uses Monday.com's documented file upload API
+- ✅ All attachments appear in Monday items
+
+### 🐛 Resolved Issues
+
+- Fixed: "Invalid GraphQL request - Request body must be a JSON with query"
+- Fixed: Wrong endpoint - was using GraphQL endpoint for file uploads
+- Fixed: Files now upload using Monday.com's `/v2/file` REST endpoint
+
+---
+
 ## [1.3.3] - 2025-11-12
 
 ### 🔧 Fixed - CRITICAL
