@@ -130,27 +130,62 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   async function loadBoards() {
     try {
+      console.log('Loading boards in create-bug...');
       const settings = await chrome.storage.sync.get(['mondayToken']);
       
       if (!settings.mondayToken) {
+        console.log('No Monday token found');
         boardSelect.innerHTML = '<option value="">Not connected to Monday.com</option>';
         return;
       }
 
       boardSelect.innerHTML = '<option value="">Loading boards...</option>';
+      boardSelect.disabled = true;
 
       chrome.runtime.sendMessage(
         { action: 'testMondayConnection', token: settings.mondayToken },
         async (response) => {
-          if (response.success) {
+          console.log('Boards response:', response);
+          
+          if (chrome.runtime.lastError) {
+            console.error('Runtime error loading boards:', chrome.runtime.lastError);
+            boardSelect.innerHTML = '<option value="">Error loading boards</option>';
+            boardSelect.disabled = false;
+            return;
+          }
+          
+          if (response && response.success && response.workspaces) {
+            console.log(`Loaded ${response.workspaces.length} boards`);
             boardSelect.innerHTML = '<option value="">Select a board</option>';
             
+            // Group boards by workspace
+            const boardsByWorkspace = {};
             response.workspaces.forEach(board => {
-              const option = document.createElement('option');
-              option.value = board.id;
-              option.textContent = board.name;
-              option.dataset.groups = JSON.stringify(board.groups);
-              boardSelect.appendChild(option);
+              const workspaceName = board.workspace?.name || 'No Workspace';
+              if (!boardsByWorkspace[workspaceName]) {
+                boardsByWorkspace[workspaceName] = [];
+              }
+              boardsByWorkspace[workspaceName].push(board);
+            });
+            
+            // Sort workspace names
+            const workspaceNames = Object.keys(boardsByWorkspace).sort();
+            
+            // Add boards grouped by workspace
+            workspaceNames.forEach(workspaceName => {
+              const optgroup = document.createElement('optgroup');
+              optgroup.label = workspaceName;
+              
+              boardsByWorkspace[workspaceName].forEach(board => {
+                const option = document.createElement('option');
+                option.value = board.id;
+                option.textContent = board.name;
+                option.dataset.groups = JSON.stringify(board.groups);
+                option.dataset.workspace = workspaceName;
+                optgroup.appendChild(option);
+              });
+              
+              boardSelect.appendChild(optgroup);
             });
 
             // Load saved selection
@@ -159,13 +194,19 @@ document.addEventListener('DOMContentLoaded', async () => {
               boardSelect.value = saved.selectedBoardId;
               await loadGroups();
             }
+            
+            boardSelect.disabled = false;
           } else {
+            console.error('Failed to load boards:', response);
             boardSelect.innerHTML = '<option value="">Failed to load boards</option>';
+            boardSelect.disabled = false;
           }
         }
       );
     } catch (error) {
       console.error('Error loading boards:', error);
+      boardSelect.innerHTML = '<option value="">Error loading boards</option>';
+      boardSelect.disabled = false;
     }
   }
 

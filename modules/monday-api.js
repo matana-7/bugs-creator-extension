@@ -62,25 +62,72 @@ export class MondayAPI {
   }
 
   async fetchWorkspaces() {
-    const query = `
-      query {
-        boards {
-          id
-          name
-          workspace {
+    console.log('Fetching all boards with pagination...');
+    const allBoards = [];
+    let page = 1;
+    const limit = 50; // Monday.com typically allows up to 500, but we'll use 50 for safety
+    let hasMore = true;
+
+    while (hasMore) {
+      console.log(`Fetching boards page ${page}...`);
+      
+      const query = `
+        query ($page: Int!, $limit: Int!) {
+          boards(limit: $limit, page: $page) {
             id
             name
-          }
-          groups {
-            id
-            title
+            workspace {
+              id
+              name
+            }
+            groups {
+              id
+              title
+            }
           }
         }
-      }
-    `;
+      `;
 
-    const data = await this.query(query);
-    return data.boards;
+      try {
+        const data = await this.query(query, { page, limit });
+        const boards = data.boards || [];
+        
+        console.log(`Received ${boards.length} boards on page ${page}`);
+        
+        if (boards.length > 0) {
+          allBoards.push(...boards);
+          
+          // If we got less than the limit, we've reached the end
+          if (boards.length < limit) {
+            hasMore = false;
+          } else {
+            page++;
+          }
+        } else {
+          hasMore = false;
+        }
+      } catch (error) {
+        console.error(`Error fetching boards page ${page}:`, error);
+        // If pagination fails, at least return what we have
+        hasMore = false;
+      }
+    }
+
+    console.log(`Total boards fetched: ${allBoards.length}`);
+    
+    // Sort boards by workspace name, then by board name
+    allBoards.sort((a, b) => {
+      const workspaceA = a.workspace?.name || 'No Workspace';
+      const workspaceB = b.workspace?.name || 'No Workspace';
+      
+      if (workspaceA !== workspaceB) {
+        return workspaceA.localeCompare(workspaceB);
+      }
+      
+      return a.name.localeCompare(b.name);
+    });
+
+    return allBoards;
   }
 
   async fetchRecentItems(boardId, groupId, limit = 10) {

@@ -53,16 +53,39 @@
       <section class="settings-section">
         <h2>Board & Group Selection</h2>
         
-        <div class="form-group">
-          <label for="boardSelect">Default Board:</label>
-          <select id="boardSelect">
-            <option value="">Select a board...</option>
-          </select>
+        <div class="boards-search-container">
+          <div class="form-group">
+            <label for="boardSearch">Search Boards:</label>
+            <div class="search-input-wrapper">
+              <input 
+                type="text" 
+                id="boardSearch" 
+                placeholder="Type to filter boards..."
+                class="search-input"
+              >
+              <span class="search-icon-inline">🔍</span>
+              <button type="button" class="clear-search" id="clearBoardSearch" style="display: none;">×</button>
+            </div>
+            <small class="help-text" id="boardCount"></small>
+          </div>
         </div>
 
         <div class="form-group">
-          <label for="groupSelect">Default Group:</label>
-          <select id="groupSelect">
+          <label for="boardSelect">Select Board:</label>
+          <div class="custom-select-container">
+            <select id="boardSelect" class="board-select">
+              <option value="">Loading boards...</option>
+            </select>
+            <div class="select-status" id="boardSelectStatus">
+              <span class="spinner-small"></span>
+              <span>Loading boards...</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="groupSelect">Select Group:</label>
+          <select id="groupSelect" class="group-select">
             <option value="">Select board first</option>
           </select>
         </div>

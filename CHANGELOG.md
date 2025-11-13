@@ -2,6 +2,39 @@
 
 All notable changes to the Bug Reporter extension will be documented in this file.
 
+## [1.2.0] - 2025-11-12
+
+### 🎯 BOARDS CONFIGURATION UPDATE
+
+Major improvements to Monday.com board selection and configuration.
+
+#### Added
+- **Pagination support** - Loads ALL boards from Monday.com (not just first batch)
+- **Board search** - Real-time search box with 200ms debounce
+- **Workspace grouping** - Boards organized by workspace in dropdown
+- **Board count indicator** - Shows "X of Y boards" when filtering
+- **Clear search button** - Quick reset of search filter
+- **Loading states** - Spinner and status text during board loading
+
+#### Changed
+- `fetchWorkspaces()` now fetches all boards with pagination (50 per page)
+- Boards sorted alphabetically by workspace, then by name
+- Settings UI redesigned with search container
+- Board dropdown uses optgroups for workspaces
+- Better error handling and console logging
+
+#### Improved
+- User experience for accounts with 50+ boards
+- Ability to quickly find specific boards
+- Clear visual hierarchy with workspace grouping
+- Professional styling and loading indicators
+
+#### Technical
+- Pagination loop in `modules/monday-api.js`
+- Client-side filtering in `scripts/settings.js`
+- Workspace grouping algorithm
+- Debounced search for performance
+
 ## [1.1.1] - 2025-11-12
 
 ### 🚨 CRITICAL FIXES

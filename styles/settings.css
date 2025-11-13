@@ -115,6 +115,120 @@ body {
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
+/* Board Search */
+.boards-search-container {
+  background: #f6f8fa;
+  padding: 16px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+}
+
+.search-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-input {
+  flex: 1;
+  padding-right: 70px !important;
+}
+
+.search-icon-inline {
+  position: absolute;
+  right: 40px;
+  font-size: 16px;
+  color: #6a737d;
+  pointer-events: none;
+}
+
+.clear-search {
+  position: absolute;
+  right: 10px;
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  width: 24px;
+  height: 24px;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.clear-search:hover {
+  background: #c82333;
+}
+
+/* Custom Select Container */
+.custom-select-container {
+  position: relative;
+}
+
+.board-select,
+.group-select {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.board-select option,
+.group-select option {
+  padding: 10px;
+  border-bottom: 1px solid #e1e4e8;
+}
+
+.board-select option[data-workspace]::before {
+  content: attr(data-workspace) " / ";
+  color: #6a737d;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.select-status {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: #f6f8fa;
+  border: 1px solid #d1d5da;
+  border-radius: 6px;
+  margin-top: 8px;
+  font-size: 13px;
+  color: #6a737d;
+}
+
+.select-status.loading {
+  display: flex;
+}
+
+.spinner-small {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(102, 126, 234, 0.3);
+  border-top-color: #667eea;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+/* Improved Board Options */
+select option {
+  padding: 8px;
+}
+
+select optgroup {
+  font-weight: 600;
+  color: #24292e;
+  background: #f6f8fa;
+}
+
+#boardCount {
+  margin-top: 6px;
+  color: #667eea;
+  font-weight: 500;
+}
+
 /* Input with Button */
 .input-with-button {
   display: flex;

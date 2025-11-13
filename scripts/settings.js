@@ -1,5 +1,9 @@
 // Settings Script - Handles Monday.com connection and preferences
 
+// Store all boards for filtering
+let allBoards = [];
+let filteredBoards = [];
+
 document.addEventListener('DOMContentLoaded', async () => {
   // Load current settings
   await loadSettings();
@@ -14,6 +18,31 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('saveHARSettingsBtn').addEventListener('click', saveHARSettings);
   document.getElementById('saveConsentBtn').addEventListener('click', saveConsent);
   document.getElementById('clearDataBtn').addEventListener('click', clearData);
+  
+  // Board search functionality
+  const boardSearch = document.getElementById('boardSearch');
+  const clearBoardSearch = document.getElementById('clearBoardSearch');
+  
+  let searchTimeout;
+  boardSearch.addEventListener('input', (e) => {
+    clearTimeout(searchTimeout);
+    const searchValue = e.target.value;
+    
+    // Show/hide clear button
+    clearBoardSearch.style.display = searchValue ? 'block' : 'none';
+    
+    // Debounce search
+    searchTimeout = setTimeout(() => {
+      filterBoards(searchValue);
+    }, 200);
+  });
+  
+  clearBoardSearch.addEventListener('click', () => {
+    boardSearch.value = '';
+    clearBoardSearch.style.display = 'none';
+    filterBoards('');
+    boardSearch.focus();
+  });
 
   async function loadSettings() {
     try {
@@ -150,8 +179,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   async function loadBoards(token) {
     try {
+      console.log('Loading all boards with pagination...');
       const boardSelect = document.getElementById('boardSelect');
+      const boardSelectStatus = document.getElementById('boardSelectStatus');
+      const boardCount = document.getElementById('boardCount');
+      
+      // Show loading state
       boardSelect.innerHTML = '<option value="">Loading boards...</option>';
+      boardSelect.disabled = true;
+      boardSelectStatus.classList.add('loading');
+      boardCount.textContent = 'Loading boards...';
 
       const response = await new Promise((resolve) => {
         chrome.runtime.sendMessage(
@@ -161,26 +198,105 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
 
       if (response.success && response.workspaces) {
-        boardSelect.innerHTML = '<option value="">Select a board...</option>';
+        allBoards = response.workspaces;
+        console.log(`Loaded ${allBoards.length} total boards`);
         
-        response.workspaces.forEach(board => {
-          const option = document.createElement('option');
-          option.value = board.id;
-          option.textContent = board.name;
-          option.dataset.groups = JSON.stringify(board.groups);
-          boardSelect.appendChild(option);
-        });
-
+        // Initially show all boards
+        filteredBoards = allBoards;
+        displayBoards(filteredBoards);
+        
+        // Update count
+        updateBoardCount(filteredBoards.length, allBoards.length);
+        
         // Restore saved selection
         const settings = await chrome.storage.sync.get(['selectedBoardId']);
         if (settings.selectedBoardId) {
           boardSelect.value = settings.selectedBoardId;
+          await loadGroups();
         }
+        
+        boardSelect.disabled = false;
+        boardSelectStatus.classList.remove('loading');
       } else {
         boardSelect.innerHTML = '<option value="">Failed to load boards</option>';
+        boardCount.textContent = 'Failed to load boards';
+        boardSelect.disabled = false;
+        boardSelectStatus.classList.remove('loading');
       }
     } catch (error) {
       console.error('Error loading boards:', error);
+      document.getElementById('boardSelect').innerHTML = '<option value="">Error loading boards</option>';
+      document.getElementById('boardCount').textContent = 'Error loading boards';
+      document.getElementById('boardSelect').disabled = false;
+      document.getElementById('boardSelectStatus').classList.remove('loading');
+    }
+  }
+  
+  function displayBoards(boards) {
+    const boardSelect = document.getElementById('boardSelect');
+    boardSelect.innerHTML = '<option value="">Select a board...</option>';
+    
+    if (boards.length === 0) {
+      boardSelect.innerHTML = '<option value="">No boards found</option>';
+      return;
+    }
+    
+    // Group boards by workspace
+    const boardsByWorkspace = {};
+    boards.forEach(board => {
+      const workspaceName = board.workspace?.name || 'No Workspace';
+      if (!boardsByWorkspace[workspaceName]) {
+        boardsByWorkspace[workspaceName] = [];
+      }
+      boardsByWorkspace[workspaceName].push(board);
+    });
+    
+    // Sort workspace names
+    const workspaceNames = Object.keys(boardsByWorkspace).sort();
+    
+    // Add boards grouped by workspace
+    workspaceNames.forEach(workspaceName => {
+      const optgroup = document.createElement('optgroup');
+      optgroup.label = workspaceName;
+      
+      boardsByWorkspace[workspaceName].forEach(board => {
+        const option = document.createElement('option');
+        option.value = board.id;
+        option.textContent = board.name;
+        option.dataset.groups = JSON.stringify(board.groups);
+        option.dataset.workspace = workspaceName;
+        optgroup.appendChild(option);
+      });
+      
+      boardSelect.appendChild(optgroup);
+    });
+  }
+  
+  function filterBoards(searchTerm) {
+    if (!searchTerm || searchTerm.trim() === '') {
+      // No search, show all boards
+      filteredBoards = allBoards;
+    } else {
+      // Filter by board name or workspace name
+      const term = searchTerm.toLowerCase();
+      filteredBoards = allBoards.filter(board => {
+        const boardName = board.name.toLowerCase();
+        const workspaceName = (board.workspace?.name || '').toLowerCase();
+        return boardName.includes(term) || workspaceName.includes(term);
+      });
+    }
+    
+    console.log(`Filtered to ${filteredBoards.length} boards`);
+    displayBoards(filteredBoards);
+    updateBoardCount(filteredBoards.length, allBoards.length);
+  }
+  
+  function updateBoardCount(filtered, total) {
+    const boardCount = document.getElementById('boardCount');
+    if (filtered === total) {
+      boardCount.textContent = `Showing all ${total} board${total !== 1 ? 's' : ''}`;
+    } else {
+      boardCount.textContent = `Showing ${filtered} of ${total} boards`;
     }
   }
 
