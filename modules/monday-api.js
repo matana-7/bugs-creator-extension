@@ -45,8 +45,10 @@ export class MondayAPI {
       console.log('Monday API result:', result);
       
       if (result.errors && result.errors.length > 0) {
-        console.error('Monday GraphQL errors:', result.errors);
-        throw new Error(`Monday GraphQL error: ${result.errors[0].message}`);
+        console.error('Monday GraphQL errors:', JSON.stringify(result.errors, null, 2));
+        const errorMsg = result.errors[0].message || 'Unknown error';
+        const errorPath = result.errors[0].path ? ` (${result.errors[0].path.join('.')})` : '';
+        throw new Error(`Monday GraphQL error: ${errorMsg}${errorPath}`);
       }
 
       if (!result.data) {
@@ -108,8 +110,16 @@ export class MondayAPI {
         }
       } catch (error) {
         console.error(`Error fetching boards page ${page}:`, error);
-        // If pagination fails, at least return what we have
-        hasMore = false;
+        
+        // If it's an authorization error, stop pagination gracefully
+        if (error.message && error.message.includes('unauthorized')) {
+          console.warn(`Skipping remaining boards - unauthorized access at page ${page}`);
+          hasMore = false;
+        } else {
+          // For other errors, still stop but log differently
+          console.warn(`Pagination stopped at page ${page} due to error`);
+          hasMore = false;
+        }
       }
     }
 

@@ -2,6 +2,31 @@
 
 All notable changes to the Bug Reporter extension will be documented in this file.
 
+## [1.2.1] - 2025-11-12
+
+### 🚨 CRITICAL BUG FIXES
+
+Emergency release fixing blocking issues that prevented core functionality.
+
+#### Fixed
+- **GraphQL error display** - Errors now show clear messages instead of "[object Object]"
+- **Pagination crash** - Handles unauthorized boards gracefully without crashing
+- **JavaScript syntax error** - Removed duplicate `submitBtn` declaration
+- **Create bug broken** - Button now works correctly, creates Monday items
+- **Screenshot not working** - Fixed by resolving JS error that blocked execution
+- **File upload not working** - Fixed by resolving JS error that blocked execution
+
+#### Technical
+- `modules/monday-api.js`: Added `JSON.stringify` for error logging, error path extraction
+- `modules/monday-api.js`: Added graceful handling for unauthorized pagination errors
+- `scripts/create-bug.js`: Removed duplicate variable declaration on line 87
+
+#### Impact
+- ✅ All core functionality restored
+- ✅ Clear error messages for debugging
+- ✅ Robust pagination handling
+- ✅ No console errors
+
 ## [1.2.0] - 2025-11-12
 
 ### 🎯 BOARDS CONFIGURATION UPDATE

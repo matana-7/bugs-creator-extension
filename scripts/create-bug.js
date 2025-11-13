@@ -84,7 +84,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Real-time validation for Title field
   const titleInput = document.getElementById('title');
   const titleError = document.getElementById('titleError');
-  const submitBtn = document.getElementById('submitBtn');
 
   titleInput.addEventListener('input', () => {
     if (titleInput.value.trim()) {
