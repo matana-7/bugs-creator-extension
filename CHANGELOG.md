@@ -2,6 +2,54 @@
 
 All notable changes to the Bug Reporter extension will be documented in this file.
 
+## [1.3.3] - 2025-11-12
+
+### 🔧 Fixed - CRITICAL
+
+**File Upload - Correct Implementation (Third Attempt)**
+
+- **BREAKING FIX**: Replaced non-existent `create_asset` API with correct GraphQL multipart format
+  - v1.3.2 attempted to use `create_asset` mutation which doesn't exist in Monday.com API
+  - Error was: "Cannot query field 'create_asset' on type 'Mutation'"
+- **Correct Implementation**: Standard GraphQL multipart request specification
+  - `operations`: JSON string containing mutation and variables
+  - `map`: JSON object mapping file positions to variable paths  
+  - Files appended with numeric keys (0, 1, 2, etc.)
+- **Format**: `add_file_to_update(update_id: ID, file: File!)`
+  - Uses Monday.com's actual mutation signature
+  - File passed as multipart form data, not JSON
+
+**Technical Details:**
+```javascript
+// operations field
+{
+  query: "mutation ($file: File!) { add_file_to_update(...) }",
+  variables: { file: null }
+}
+
+// map field
+{
+  "0": ["variables.file"]  // File at key "0" maps to variables.file
+}
+
+// File field
+FormData key "0" with actual blob
+```
+
+**Impact:**
+- ✅ Files now upload using correct Monday.com API
+- ✅ No more "Cannot query field 'create_asset'" errors
+- ✅ Uses standard GraphQL multipart request specification
+- ✅ All attachments appear in Monday items
+
+### 🐛 Resolved Issues
+
+- Fixed: "Cannot query field 'create_asset'" - mutation doesn't exist
+- Fixed: v1.3.2 used incorrect API endpoint
+- Fixed: Files now upload with proper multipart format
+
+---
+
 ## [1.3.2] - 2025-11-12
 
 ### 🔧 Fixed - CRITICAL
