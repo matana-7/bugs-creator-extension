@@ -2,6 +2,49 @@
 
 All notable changes to the Bug Reporter extension will be documented in this file.
 
+## [1.3.2] - 2025-11-12
+
+### 🔧 Fixed - CRITICAL
+
+**File Upload Implementation - Complete Rewrite**
+
+- **BREAKING FIX**: Replaced incorrect multipart upload with Monday.com's official 3-step Assets API
+  - Step 1: `create_asset` mutation to get presigned URL
+  - Step 2: Direct PUT upload to presigned URL (bypasses GraphQL API)
+  - Step 3: `add_file_to_update` to link uploaded asset to item
+- **Root Cause**: Monday.com does NOT support GraphQL multipart request specification
+  - Previous attempts (v1.3.0, v1.3.1) used standard GraphQL multipart format
+  - Monday.com requires their proprietary 3-step asset upload process
+  - Error was: "Invalid GraphQL request - Request body must be a JSON with query"
+- **Enhanced Error Handling**:
+  - Authorization errors (boards/uploads) now handled gracefully
+  - Clear console warnings for limited token permissions
+  - Improved error messages with JSON.stringify for GraphQL errors
+- **Console Logging**: Added step-by-step progress for asset creation, upload, and linking
+- **API Version Header**: Added `API-Version: 2024-01` to Monday.com requests for consistency
+
+**Impact**: 
+- ✅ Files and screenshots now successfully upload to Monday.com
+- ✅ No more HTTP 400 "Invalid GraphQL request" errors
+- ✅ Proper presigned URL upload (direct to storage, not through API)
+- ✅ All attachments appear in Monday items after creation
+
+### 📝 Changed
+
+- Authorization errors during board fetching now log as warnings (not errors)
+- Pagination stops gracefully when token lacks board access
+- Extension returns all accessible boards even if some are unauthorized
+
+### 🐛 Resolved Issues
+
+- Fixed: "File upload HTTP error: Invalid GraphQL request"
+- Fixed: Files uploading but not appearing in Monday items
+- Fixed: HTTP 400 errors after 3 retry attempts
+- Fixed: Authorization errors crashing board selection
+- Fixed: "User unauthorized to perform action" causing complete failures
+
+---
+
 ## [1.3.1] - 2025-11-12
 
 ### 🚨 CRITICAL FILE UPLOAD FIX

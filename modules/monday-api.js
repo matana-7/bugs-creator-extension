@@ -111,9 +111,9 @@ export class MondayAPI {
       } catch (error) {
         console.error(`Error fetching boards page ${page}:`, error);
         
-        // If it's an authorization error, stop pagination gracefully
-        if (error.message && error.message.includes('unauthorized')) {
-          console.warn(`Skipping remaining boards - unauthorized access at page ${page}`);
+        // If it's an authorization error, stop pagination gracefully and return what we have
+        if (error.message && (error.message.includes('unauthorized') || error.message.includes('UserUnauthorizedException'))) {
+          console.warn(`⚠️ Unauthorized access at page ${page} - this is normal if token has limited board access`);
           hasMore = false;
         } else {
           // For other errors, still stop but log differently
@@ -466,43 +466,95 @@ export class MondayAPI {
 
       console.log(`File size: ${(blob.size / 1024).toFixed(2)} KB, MIME: ${mimeType}`);
 
-      // Use Monday.com's file upload API with proper multipart format
-      const formData = new FormData();
+      // Use Monday.com's ACTUAL file upload API
+      // Monday.com requires a two-step process:
+      // 1. Get a presigned URL via assets API
+      // 2. Upload file to that URL
+      // 3. Add the asset to the update
       
-      // Monday.com multipart upload format
-      // 1. The mutation with null placeholder
-      const mutation = `mutation ($file: File!) {
-        add_file_to_update (update_id: ${updateId}, file: $file) {
-          id
-          name
-          url
-          file_extension
-          file_size
+      console.log('Uploading file using Monday.com assets API...');
+      
+      // Step 1: Create asset and get upload URL
+      const assetQuery = `
+        mutation {
+          create_asset {
+            id
+            url
+            upload_url
+          }
         }
-      }`;
+      `;
       
-      formData.append('query', mutation);
+      console.log('Step 1: Creating asset...');
+      const assetResponse = await fetch(this.apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': this.token,
+          'API-Version': '2024-01'
+        },
+        body: JSON.stringify({ query: assetQuery })
+      });
       
-      // 2. The map that links the file to the variable
-      const map = {
-        "image": ["variables.file"]
-      };
-      formData.append('map', JSON.stringify(map));
+      if (!assetResponse.ok) {
+        const errorText = await assetResponse.text();
+        console.error('Asset creation error:', errorText);
+        throw new Error(`Failed to create asset: ${assetResponse.status}`);
+      }
       
-      // 3. The actual file
-      formData.append('image', blob, file.name);
-
-      console.log('Sending upload request to Monday.com...');
-      console.log('Mutation:', mutation);
-      console.log('File name:', file.name, 'Size:', blob.size);
+      const assetResult = await assetResponse.json();
+      console.log('Asset creation result:', assetResult);
+      
+      if (assetResult.errors) {
+        console.error('Asset creation GraphQL errors:', JSON.stringify(assetResult.errors, null, 2));
+        throw new Error(assetResult.errors[0].message);
+      }
+      
+      const asset = assetResult.data.create_asset;
+      console.log(`✓ Asset created: ${asset.id}`);
+      
+      // Step 2: Upload file to presigned URL
+      console.log('Step 2: Uploading file to presigned URL...');
+      const uploadResponse = await fetch(asset.upload_url, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': mimeType
+        },
+        body: blob
+      });
+      
+      if (!uploadResponse.ok) {
+        console.error('File upload to presigned URL failed:', uploadResponse.status);
+        throw new Error(`Failed to upload file: ${uploadResponse.status}`);
+      }
+      
+      console.log(`✓ File uploaded to storage`);
+      
+      // Step 3: Add asset to update
+      console.log('Step 3: Adding asset to update...');
+      const addAssetQuery = `
+        mutation {
+          add_file_to_update(
+            update_id: ${updateId},
+            file_id: ${asset.id}
+          ) {
+            id
+            name
+            url
+            file_extension
+            file_size
+          }
+        }
+      `;
       
       const response = await fetch(this.apiUrl, {
         method: 'POST',
         headers: {
-          'Authorization': this.token
-          // Don't set Content-Type - browser will set it with multipart boundary
+          'Content-Type': 'application/json',
+          'Authorization': this.token,
+          'API-Version': '2024-01'
         },
-        body: formData
+        body: JSON.stringify({ query: addAssetQuery })
       });
 
       console.log(`Upload response status: ${response.status}`);
