@@ -363,89 +363,141 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function createStatusInput(column) {
-    const select = document.createElement('select');
-    select.className = 'monday-field-input status-input';
-    select.dataset.columnId = column.id;
+    // Create custom dropdown container (not native select)
+    const container = document.createElement('div');
+    container.className = 'custom-status-dropdown';
+    container.dataset.columnId = column.id;
     
-    // Add empty option
-    const emptyOption = document.createElement('option');
-    emptyOption.value = '';
-    emptyOption.textContent = '✓ -- Leave unchanged --';
-    select.appendChild(emptyOption);
+    // Create the display button
+    const displayBtn = document.createElement('button');
+    displayBtn.type = 'button';
+    displayBtn.className = 'status-display-btn';
+    displayBtn.innerHTML = '<span class="status-text">-- Leave unchanged --</span><span class="dropdown-arrow">▼</span>';
+    
+    // Create dropdown panel
+    const dropdownPanel = document.createElement('div');
+    dropdownPanel.className = 'status-dropdown-panel';
+    dropdownPanel.style.display = 'none';
+    
+    // Map Monday color names to hex codes
+    const mondayColorMap = {
+      'green': '#00c875',
+      'bright-green': '#9cd326',
+      'lime': '#9cd326',
+      'red': '#e2445c',
+      'dark-red': '#bb3354',
+      'orange': '#fdab3d',
+      'yellow': '#ffcb00',
+      'blue': '#0086c0',
+      'dark-blue': '#579bfc',
+      'aquamarine': '#4eccc6',
+      'purple': '#a25ddc',
+      'dark-purple': '#784bd1',
+      'pink': '#ff158a',
+      'magenta': '#ff5ac4',
+      'gray': '#c4c4c4',
+      'grey': '#c4c4c4',
+      'dark-gray': '#808080',
+      'dark-grey': '#808080',
+      'black': '#333333',
+      'brown': '#7e3b3a',
+      'peach': '#ffadad',
+      'berry': '#e44258',
+      'indigo': '#401694'
+    };
+    
+    // Store selected value
+    let selectedValue = '';
+    
+    // Add "Leave unchanged" option
+    const emptyOption = document.createElement('div');
+    emptyOption.className = 'status-option';
+    emptyOption.innerHTML = '<span class="status-label-text">-- Leave unchanged --</span>';
+    emptyOption.dataset.value = '';
+    dropdownPanel.appendChild(emptyOption);
     
     // Parse labels from settings
     if (column.settings && column.settings.labels) {
       Object.entries(column.settings.labels).forEach(([labelId, labelText]) => {
-        const option = document.createElement('option');
-        // Store labelText as value since Monday API expects label text, not ID
-        option.value = labelText;
+        const option = document.createElement('div');
+        option.className = 'status-option';
+        option.dataset.value = labelText;
         option.dataset.labelId = labelId;
         
-        // Get color from settings
-        let colorCode = '#333333'; // Default dark gray
+        // Get color
+        let colorCode = '#333333';
         let colorName = 'black';
         
         if (column.settings.labels_colors && column.settings.labels_colors[labelId]) {
           const colorInfo = column.settings.labels_colors[labelId];
           colorName = colorInfo.color || 'black';
-          
-          // Map Monday color names to hex codes
-          const mondayColorMap = {
-            'green': '#00c875',
-            'bright-green': '#9cd326',
-            'lime': '#9cd326',
-            'red': '#e2445c',
-            'dark-red': '#bb3354',
-            'orange': '#fdab3d',
-            'yellow': '#ffcb00',
-            'blue': '#0086c0',
-            'dark-blue': '#579bfc',
-            'aquamarine': '#4eccc6',
-            'purple': '#a25ddc',
-            'dark-purple': '#784bd1',
-            'pink': '#ff158a',
-            'magenta': '#ff5ac4',
-            'gray': '#c4c4c4',
-            'grey': '#c4c4c4',
-            'dark-gray': '#808080',
-            'dark-grey': '#808080',
-            'black': '#333333',
-            'brown': '#7e3b3a',
-            'peach': '#ffadad',
-            'berry': '#e44258',
-            'indigo': '#401694'
-          };
-          
           colorCode = mondayColorMap[colorName.toLowerCase()] || colorCode;
         }
         
-        // Create colored circle using Unicode + CSS
-        const circle = '●';
-        option.textContent = `${circle} ${labelText}`;
+        // Create option with colored circle
+        option.innerHTML = `
+          <span class="status-color-circle" style="background-color: ${colorCode};"></span>
+          <span class="status-label-text">${labelText}</span>
+        `;
         option.dataset.color = colorName;
         option.dataset.colorCode = colorCode;
-        option.style.fontWeight = '500';
         
-        // Apply color to the option
-        option.setAttribute('data-color-style', colorCode);
-        
-        select.appendChild(option);
+        dropdownPanel.appendChild(option);
       });
     }
     
-    // Add change event to update select style based on selected option
-    select.addEventListener('change', function() {
-      const selectedOption = this.options[this.selectedIndex];
-      if (selectedOption && selectedOption.dataset.colorCode) {
-        this.style.color = selectedOption.dataset.colorCode;
-        this.style.fontWeight = '600';
-      } else {
-        this.style.color = '#333';
-        this.style.fontWeight = '400';
-      }
+    // Toggle dropdown
+    displayBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = dropdownPanel.style.display === 'block';
+      
+      // Close all other dropdowns first
+      document.querySelectorAll('.status-dropdown-panel').forEach(panel => {
+        panel.style.display = 'none';
+      });
+      
+      dropdownPanel.style.display = isOpen ? 'none' : 'block';
     });
     
-    return select;
+    // Handle option selection
+    dropdownPanel.addEventListener('click', (e) => {
+      const option = e.target.closest('.status-option');
+      if (!option) return;
+      
+      selectedValue = option.dataset.value;
+      const colorCode = option.dataset.colorCode;
+      
+      // Update display
+      if (selectedValue === '') {
+        displayBtn.innerHTML = '<span class="status-text">-- Leave unchanged --</span><span class="dropdown-arrow">▼</span>';
+      } else {
+        const circle = colorCode ? `<span class="status-color-circle" style="background-color: ${colorCode};"></span>` : '';
+        displayBtn.innerHTML = `${circle}<span class="status-text">${selectedValue}</span><span class="dropdown-arrow">▼</span>`;
+      }
+      
+      // Close dropdown
+      dropdownPanel.style.display = 'none';
+      
+      // Mark as selected
+      dropdownPanel.querySelectorAll('.status-option').forEach(opt => {
+        opt.classList.remove('selected');
+      });
+      option.classList.add('selected');
+    });
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', () => {
+      dropdownPanel.style.display = 'none';
+    });
+    
+    // Assemble the dropdown
+    container.appendChild(displayBtn);
+    container.appendChild(dropdownPanel);
+    
+    // Add getValue method for form collection
+    container.getValue = () => selectedValue;
+    
+    return container;
   }
 
   function createTextInput(column) {
@@ -549,8 +601,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     fields.forEach(field => {
       const columnId = field.dataset.columnId;
       const columnType = field.dataset.columnType;
-      const input = field.querySelector('.monday-field-input, .monday-field-checkbox');
       
+      // Handle custom status dropdown
+      const customDropdown = field.querySelector('.custom-status-dropdown');
+      if (customDropdown && customDropdown.getValue) {
+        const value = customDropdown.getValue();
+        if (value && value !== '') {
+          columnValues[columnId] = formatColumnValue(columnType, value, null);
+        }
+        return;
+      }
+      
+      // Handle regular inputs
+      const input = field.querySelector('.monday-field-input, .monday-field-checkbox');
       if (!input) return;
       
       let value = input.value;
