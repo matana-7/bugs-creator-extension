@@ -434,10 +434,9 @@ document.addEventListener('DOMContentLoaded', async () => {
           colorCode = mondayColorMap[colorName.toLowerCase()] || colorCode;
         }
         
-        // Create option with colored circle
+        // Create option with colored text
         option.innerHTML = `
-          <span class="status-color-circle" style="background-color: ${colorCode};"></span>
-          <span class="status-label-text">${labelText}</span>
+          <span class="status-label-text" style="color: ${colorCode}; font-weight: 600;">${labelText}</span>
         `;
         option.dataset.color = colorName;
         option.dataset.colorCode = colorCode;
@@ -471,8 +470,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (selectedValue === '') {
         displayBtn.innerHTML = '<span class="status-text">-- Leave unchanged --</span><span class="dropdown-arrow">▼</span>';
       } else {
-        const circle = colorCode ? `<span class="status-color-circle" style="background-color: ${colorCode};"></span>` : '';
-        displayBtn.innerHTML = `${circle}<span class="status-text">${selectedValue}</span><span class="dropdown-arrow">▼</span>`;
+        const colorStyle = colorCode ? `style="color: ${colorCode}; font-weight: 600;"` : '';
+        displayBtn.innerHTML = `<span class="status-text" ${colorStyle}>${selectedValue}</span><span class="dropdown-arrow">▼</span>`;
       }
       
       // Close dropdown
