@@ -75,10 +75,12 @@ export class MondayAPI {
     console.log('Fetching all boards with pagination...');
     const allBoards = [];
     let page = 1;
-    const limit = 50; // Monday.com typically allows up to 500, but we'll use 50 for safety
+    const limit = 100; // Increase to 100 to fetch more boards per request
     let hasMore = true;
+    let consecutiveErrors = 0;
+    const MAX_CONSECUTIVE_ERRORS = 2;
 
-    while (hasMore) {
+    while (hasMore && consecutiveErrors < MAX_CONSECUTIVE_ERRORS) {
       console.log(`Fetching boards page ${page}...`);
       
       const query = `
@@ -102,36 +104,57 @@ export class MondayAPI {
         const data = await this.query(query, { page, limit });
         const boards = data.boards || [];
         
-        console.log(`Received ${boards.length} boards on page ${page}`);
+        console.log(`✓ Received ${boards.length} boards on page ${page}`);
+        consecutiveErrors = 0;
         
         if (boards.length > 0) {
           allBoards.push(...boards);
           
           // If we got less than the limit, we've reached the end
           if (boards.length < limit) {
+            console.log(`✓ Reached end of boards (got ${boards.length} < ${limit})`);
             hasMore = false;
           } else {
             page++;
           }
         } else {
+          console.log('✓ No more boards to fetch');
           hasMore = false;
         }
       } catch (error) {
-        console.error(`Error fetching boards page ${page}:`, error);
+        console.error(`⚠️ Error fetching boards page ${page}:`, error.message);
+        consecutiveErrors++;
         
-        // If it's an authorization error, stop pagination gracefully and return what we have
         if (error.message && (error.message.includes('unauthorized') || error.message.includes('UserUnauthorizedException'))) {
-          console.warn(`⚠️ Unauthorized access at page ${page} - this is normal if token has limited board access`);
-          hasMore = false;
+          console.warn(`⚠️ Unauthorized access at page ${page}`);
+          console.log(`📌 Already fetched ${allBoards.length} boards`);
+          
+          // Try next page instead of stopping completely
+          if (page === 1) {
+            console.error('❌ Cannot access any boards with this token');
+            hasMore = false;
+          } else if (consecutiveErrors < MAX_CONSECUTIVE_ERRORS) {
+            console.log(`🔄 Trying page ${page + 1}...`);
+            page++;
+          } else {
+            hasMore = false;
+          }
         } else {
-          // For other errors, still stop but log differently
-          console.warn(`Pagination stopped at page ${page} due to error`);
-          hasMore = false;
+          console.warn(`⚠️ Error on page ${page}: ${error.message}`);
+          if (consecutiveErrors < MAX_CONSECUTIVE_ERRORS) {
+            page++;
+          } else {
+            hasMore = false;
+          }
         }
       }
     }
 
-    console.log(`Total boards fetched: ${allBoards.length}`);
+    console.log(`✅ Total boards fetched: ${allBoards.length}`);
+    
+    if (allBoards.length === 0) {
+      console.error('❌ No boards accessible with current API token');
+    }
     
     // Sort boards by workspace name, then by board name
     allBoards.sort((a, b) => {
@@ -181,6 +204,73 @@ export class MondayAPI {
     }
 
     return [];
+  }
+
+  async fetchBoardColumns(boardId) {
+    console.log('Fetching columns for board:', boardId);
+    
+    const query = `
+      query ($boardId: [ID!]!) {
+        boards(ids: $boardId) {
+          columns {
+            id
+            title
+            type
+            settings_str
+          }
+        }
+      }
+    `;
+
+    const data = await this.query(query, { boardId: [boardId] });
+
+    if (data.boards && data.boards[0]) {
+      const columns = data.boards[0].columns;
+      console.log(`Fetched ${columns.length} columns`);
+      
+      // Parse settings_str for each column to get additional metadata
+      return columns.map(col => {
+        let settings = {};
+        try {
+          if (col.settings_str) {
+            settings = JSON.parse(col.settings_str);
+          }
+        } catch (e) {
+          console.warn(`Failed to parse settings for column ${col.id}:`, e);
+        }
+        
+        return {
+          ...col,
+          settings
+        };
+      });
+    }
+
+    return [];
+  }
+
+  async updateColumnValues(boardId, itemId, columnValues) {
+    console.log('Updating column values for item:', itemId, columnValues);
+    
+    // Convert columnValues object to JSON string format expected by Monday
+    const columnValuesJson = JSON.stringify(columnValues);
+    
+    const mutation = `
+      mutation {
+        change_multiple_column_values(
+          board_id: ${parseInt(boardId)},
+          item_id: ${parseInt(itemId)},
+          column_values: ${JSON.stringify(columnValuesJson)}
+        ) {
+          id
+          name
+        }
+      }
+    `;
+
+    const data = await this.query(mutation);
+
+    return data.change_multiple_column_values;
   }
 
   async createBugItem(boardId, groupId, bugData, attachments = []) {

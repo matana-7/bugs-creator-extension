@@ -44,6 +44,10 @@ async function handleMessage(message, sender, sendResponse) {
         await handleTestConnection(message, sendResponse);
         break;
       
+      case 'fetchBoardColumns':
+        await handleFetchBoardColumns(message, sendResponse);
+        break;
+      
       default:
         sendResponse({ success: false, error: 'Unknown action' });
     }
@@ -122,7 +126,7 @@ async function handleCaptureScreenshot(message, sendResponse) {
 }
 
 async function handleCreateBug(message, sendResponse) {
-  const { bugData, attachmentCount } = message;
+  const { bugData, attachmentCount, columnValues } = message;
   
   try {
     console.log(`Creating bug with ${attachmentCount} attachments...`);
@@ -161,6 +165,22 @@ async function handleCreateBug(message, sendResponse) {
     
     console.log('Bug creation complete:', item);
     console.log('Upload results:', item.uploadResults);
+    
+    // Update column values if provided
+    if (columnValues && Object.keys(columnValues).length > 0) {
+      console.log('Updating column values:', columnValues);
+      try {
+        await mondayAPI.updateColumnValues(
+          settings.selectedBoardId,
+          item.id,
+          columnValues
+        );
+        console.log('Column values updated successfully');
+      } catch (columnError) {
+        console.error('Failed to update column values:', columnError);
+        // Don't fail the whole operation if column updates fail
+      }
+    }
     
     // Clean up stored attachments
     await chrome.storage.local.remove(['pendingAttachments']);
@@ -236,6 +256,27 @@ async function handleTestConnection(message, sendResponse) {
     sendResponse({ success: true, workspaces });
   } catch (error) {
     console.error('Connection test failed:', error);
+    sendResponse({ success: false, error: error.message });
+  }
+}
+
+async function handleFetchBoardColumns(message, sendResponse) {
+  const { boardId } = message;
+  
+  try {
+    const settings = await chrome.storage.sync.get(['mondayToken']);
+    
+    if (!settings.mondayToken) {
+      sendResponse({ success: false, error: 'Monday.com not connected' });
+      return;
+    }
+    
+    mondayAPI.setToken(settings.mondayToken);
+    const columns = await mondayAPI.fetchBoardColumns(boardId);
+    
+    sendResponse({ success: true, columns });
+  } catch (error) {
+    console.error('Fetch columns failed:', error);
     sendResponse({ success: false, error: error.message });
   }
 }
