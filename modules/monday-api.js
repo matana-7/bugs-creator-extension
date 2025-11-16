@@ -358,33 +358,9 @@ export class MondayAPI {
       failed: []
     };
 
-    // Create a simple update to attach files to
-    console.log(`Creating update for ${files.length} file(s) on item ${itemId}...`);
-    
-    const createUpdateMutation = `
-      mutation ($itemId: ID!) {
-        create_update(
-          item_id: $itemId,
-          body: "📎 Attachments"
-        ) {
-          id
-        }
-      }
-    `;
+    console.log(`Uploading ${files.length} file(s) directly to item ${itemId}...`);
 
-    const updateResult = await this.query(createUpdateMutation, {
-      itemId: itemId
-    });
-
-    if (!updateResult.create_update || !updateResult.create_update.id) {
-      console.error('Failed to create update:', updateResult);
-      throw new Error('Could not create update for file attachments');
-    }
-
-    const updateId = updateResult.create_update.id;
-    console.log(`✓ Update created with ID: ${updateId}`);
-
-    // Upload files with progress tracking
+    // Upload files directly to item (no update needed)
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       
@@ -405,7 +381,7 @@ export class MondayAPI {
           throw new Error(`File too large: ${file.name} exceeds 500MB limit`);
         }
 
-        await this.uploadFileToUpdate(updateId, file);
+        await this.uploadFileToItem(itemId, file);
         results.uploaded.push(file.name);
 
         if (progressCallback) {
@@ -436,6 +412,127 @@ export class MondayAPI {
     }
 
     return results;
+  }
+
+  async uploadFileToItem(itemId, file, retryCount = 0) {
+    const MAX_RETRIES = 3;
+    const RETRY_DELAY = 1000;
+
+    try {
+      console.log(`📤 Uploading ${file.name} to item ${itemId} (attempt ${retryCount + 1}/${MAX_RETRIES})...`);
+      
+      // Convert data URL to blob
+      let blob;
+      let mimeType = file.type || 'application/octet-stream';
+
+      if (file.dataUrl) {
+        blob = await this.dataUrlToBlob(file.dataUrl);
+        
+        if (file.dataUrl.startsWith('data:')) {
+          const match = file.dataUrl.match(/^data:([^;]+);/);
+          if (match) {
+            mimeType = match[1];
+          }
+        }
+      } else if (file.blob) {
+        blob = file.blob;
+        mimeType = blob.type || mimeType;
+      } else {
+        throw new Error('File must have dataUrl or blob property');
+      }
+
+      if (blob.type !== mimeType) {
+        blob = new Blob([blob], { type: mimeType });
+      }
+
+      console.log(`  ├─ Size: ${(blob.size / 1024).toFixed(2)} KB`);
+      console.log(`  ├─ Type: ${mimeType}`);
+      console.log(`  └─ Name: ${file.name}`);
+
+      // First create an update to attach the file to
+      console.log('  Creating update for file attachment...');
+      const createUpdateMutation = `
+        mutation {
+          create_update(
+            item_id: ${parseInt(itemId)},
+            body: "📎 ${file.name}"
+          ) {
+            id
+          }
+        }
+      `;
+
+      const updateResult = await this.query(createUpdateMutation);
+      
+      if (!updateResult.create_update || !updateResult.create_update.id) {
+        throw new Error('Failed to create update for file');
+      }
+
+      const updateId = parseInt(updateResult.create_update.id);
+      console.log(`  ✓ Update created: ${updateId}`);
+
+      // Now attach file to the update
+      const formData = new FormData();
+      
+      const query = `mutation { 
+        add_file_to_update(update_id: ${updateId}) { 
+          id 
+          name
+          url
+        } 
+      }`;
+      
+      formData.append('query', query);
+      formData.append('file', blob, file.name);
+      
+      console.log('  Uploading file to Monday.com...');
+      
+      const response = await fetch('https://api.monday.com/v2/file', {
+        method: 'POST',
+        headers: {
+          'Authorization': this.token
+        },
+        body: formData
+      });
+
+      console.log(`  Response: ${response.status} ${response.statusText}`);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('  ❌ HTTP Error:', errorText);
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
+      }
+
+      const result = await response.json();
+      console.log('  Response data:', result);
+      
+      if (result.errors && result.errors.length > 0) {
+        const error = result.errors[0];
+        console.error('  ❌ GraphQL Error:', error.message);
+        throw new Error(error.message);
+      }
+
+      if (!result.data || !result.data.add_file_to_update) {
+        console.error('  ❌ No file data returned:', result);
+        throw new Error('Upload succeeded but no file data returned');
+      }
+
+      console.log(`  ✅ File uploaded successfully!`);
+      console.log(`  └─ URL: ${result.data.add_file_to_update.url}`);
+      return result;
+
+    } catch (error) {
+      console.error(`  ❌ Upload failed: ${error.message}`);
+      
+      if (retryCount < MAX_RETRIES) {
+        const delay = RETRY_DELAY * Math.pow(2, retryCount);
+        console.log(`  ⏳ Retrying in ${delay}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        return this.uploadFileToItem(itemId, file, retryCount + 1);
+      }
+      
+      throw new Error(`Upload failed after ${MAX_RETRIES} attempts: ${error.message}`);
+    }
   }
 
   async uploadFileToUpdate(updateId, file, retryCount = 0) {
