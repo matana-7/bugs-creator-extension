@@ -1,0 +1,30 @@
+# Extension-specific
+*.crx
+*.pem
+*.zip
+
+# Icon generation
+icons/*.png
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node (if you add build tools later)
+node_modules/
+package-lock.json
+yarn.lock
+
+# Logs
+*.log
+
+# Temporary files
+.tmp/
+temp/
