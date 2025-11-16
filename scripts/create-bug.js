@@ -389,11 +389,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     emptyOption.dataset.value = '';
     dropdownPanel.appendChild(emptyOption);
     
-    // Debug: Log the column settings to see what Monday returns
-    console.log('Status column settings:', column.settings);
-    console.log('Labels:', column.settings?.labels);
-    console.log('Labels colors:', column.settings?.labels_colors);
-    
     // Parse labels from settings
     if (column.settings && column.settings.labels) {
       Object.entries(column.settings.labels).forEach(([labelId, labelText]) => {
@@ -411,10 +406,6 @@ document.addEventListener('DOMContentLoaded', async () => {
           // Monday gives us the hex code directly in the 'color' field!
           colorCode = colorInfo.color || '#333333';
           colorName = colorInfo.var_name || 'black';
-          
-          console.log(`Label "${labelText}" (${labelId}): color=${colorCode}, var_name=${colorName}`);
-        } else {
-          console.warn(`No color info for label "${labelText}" (${labelId})`);
         }
         
         // Create option with colored text
