@@ -45,9 +45,17 @@ export class MondayAPI {
       console.log('Monday API result:', result);
       
       if (result.errors && result.errors.length > 0) {
-        console.error('Monday GraphQL errors:', JSON.stringify(result.errors, null, 2));
         const errorMsg = result.errors[0].message || 'Unknown error';
+        const errorCode = result.errors[0].extensions?.code;
         const errorPath = result.errors[0].path ? ` (${result.errors[0].path.join('.')})` : '';
+        
+        // Only log full error details for non-authorization errors to reduce noise
+        if (errorCode === 'UserUnauthorizedException') {
+          console.warn(`Monday API: ${errorMsg}${errorPath} - This is normal if your token has limited board access`);
+        } else {
+          console.error('Monday GraphQL errors:', JSON.stringify(result.errors, null, 2));
+        }
+        
         throw new Error(`Monday GraphQL error: ${errorMsg}${errorPath}`);
       }
 
@@ -473,9 +481,9 @@ export class MondayAPI {
       
       const formData = new FormData();
       
-      // Query must include the $file variable and reference it in the mutation
-      const mutation = `mutation add_file($file: File!) { 
-        add_file_to_update(update_id: ${updateId}, file: $file) { 
+      // Query must include BOTH $file and $update_id as variables
+      const mutation = `mutation add_file($file: File!, $update_id: Int!) { 
+        add_file_to_update(update_id: $update_id, file: $file) { 
           id 
           name 
           url 
@@ -484,7 +492,13 @@ export class MondayAPI {
         } 
       }`;
       
+      // Pass variables as a JSON map
+      const variables = {
+        update_id: parseInt(updateId)
+      };
+      
       formData.append('query', mutation);
+      formData.append('variables', JSON.stringify(variables));
       formData.append('file', blob, file.name);
       
       console.log('Upload request:');
@@ -517,8 +531,10 @@ export class MondayAPI {
       console.log('Upload result:', result);
       
       if (result.errors && result.errors.length > 0) {
-        console.error('File upload GraphQL errors:', JSON.stringify(result.errors, null, 2));
-        throw new Error(result.errors[0].message);
+        const errorMsg = result.errors[0].message || 'Unknown upload error';
+        console.error('File upload failed:', errorMsg);
+        console.error('Full error details:', JSON.stringify(result.errors, null, 2));
+        throw new Error(errorMsg);
       }
 
       if (!result.data || !result.data.add_file_to_update) {
