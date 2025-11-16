@@ -28,9 +28,10 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 16px;
-  background: #0D6391;
+  background: linear-gradient(135deg, #0D6391 0%, #0D6391 85%, #EB8634 100%);
   color: white;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-bottom: 3px solid #EB8634;
 }
 
 .logo {
@@ -46,17 +47,19 @@ body {
 }
 
 .settings-btn {
-  background: rgba(255, 255, 255, 0.2);
-  border: none;
+  background: rgba(235, 134, 52, 0.3);
+  border: 1px solid rgba(235, 134, 52, 0.5);
   border-radius: 6px;
   padding: 8px;
   cursor: pointer;
   color: white;
-  transition: background 0.2s;
+  transition: all 0.2s;
 }
 
 .settings-btn:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: #EB8634;
+  border-color: #EB8634;
+  transform: scale(1.05);
 }
 
 /* Connection Status */
@@ -78,7 +81,7 @@ body {
 }
 
 .status-indicator.connected {
-  background-color: #28a745;
+  background-color: #EB8634;
 }
 
 .status-indicator.warning {
@@ -158,7 +161,8 @@ body {
 
 .results-count {
   font-size: 12px;
-  color: #6a737d;
+  color: #EB8634;
+  font-weight: 600;
 }
 
 .bugs-list {
@@ -202,12 +206,12 @@ body {
 .bug-status {
   display: inline-block;
   padding: 2px 8px;
-  background: #f1f8ff;
-  border: 1px solid #c8e1ff;
+  background: #fff5ed;
+  border: 1px solid #EB8634;
   border-radius: 12px;
   font-size: 11px;
   font-weight: 500;
-  color: #0366d6;
+  color: #EB8634;
 }
 
 .bug-date {
@@ -242,7 +246,7 @@ body {
   justify-content: center;
   gap: 8px;
   padding: 12px;
-  background: #0D6391;
+  background: linear-gradient(135deg, #0D6391 0%, #EB8634 100%);
   color: white;
   border: none;
   border-radius: 8px;
@@ -254,7 +258,7 @@ body {
 
 .create-bug-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(13, 99, 145, 0.4);
+  box-shadow: 0 4px 12px rgba(235, 134, 52, 0.5);
 }
 
 .create-bug-btn:active {

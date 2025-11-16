@@ -27,9 +27,10 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 20px 24px;
-  background: #0D6391;
+  background: linear-gradient(135deg, #0D6391 0%, #0D6391 85%, #EB8634 100%);
   color: white;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-bottom: 3px solid #EB8634;
 }
 
 .modal-header h2 {
@@ -38,20 +39,22 @@ body {
 }
 
 .close-btn {
-  background: rgba(255, 255, 255, 0.2);
-  border: none;
+  background: rgba(235, 134, 52, 0.3);
+  border: 1px solid rgba(235, 134, 52, 0.5);
   border-radius: 4px;
   width: 32px;
   height: 32px;
   font-size: 24px;
   color: white;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.2s;
   line-height: 1;
 }
 
 .close-btn:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: #EB8634;
+  border-color: #EB8634;
+  transform: scale(1.1);
 }
 
 /* Body */
@@ -117,7 +120,9 @@ body {
   font-size: 16px;
   font-weight: 600;
   margin-bottom: 16px;
-  color: #24292e;
+  color: #EB8634;
+  border-bottom: 2px solid #EB8634;
+  padding-bottom: 8px;
 }
 
 .attachment-section {
@@ -138,7 +143,7 @@ body {
 .section-header h4 {
   font-size: 14px;
   font-weight: 600;
-  color: #24292e;
+  color: #EB8634;
 }
 
 .checkbox-label {
@@ -181,18 +186,19 @@ body {
   align-items: center;
   gap: 6px;
   padding: 6px 12px;
-  background: #0D6391;
+  background: linear-gradient(135deg, #0D6391 0%, #EB8634 100%);
   color: white;
   border: none;
   border-radius: 6px;
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.2s;
 }
 
 .screenshot-btn:hover {
-  background: #0B5275;
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(235, 134, 52, 0.4);
 }
 
 .screenshot-btn:disabled {
@@ -450,7 +456,7 @@ body {
 
 .progress-fill {
   height: 100%;
-  background: #0D6391;
+  background: linear-gradient(90deg, #0D6391 0%, #EB8634 100%);
   transition: width 0.3s;
   width: 0%;
 }
@@ -491,13 +497,13 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: #0D6391;
+  background: linear-gradient(135deg, #0D6391 0%, #EB8634 100%);
   color: white;
 }
 
 .submit-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(13, 99, 145, 0.4);
+  box-shadow: 0 4px 12px rgba(235, 134, 52, 0.5);
 }
 
 .submit-btn:disabled {
