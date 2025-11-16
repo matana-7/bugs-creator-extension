@@ -217,7 +217,7 @@ export class MondayAPI {
       // Continue anyway - item was created
     }
 
-    // Attach files to the update (this is more reliable than column attachments)
+    // Attach files directly to the item's Files section
     if (attachments && attachments.length > 0) {
       console.log(`Attaching ${attachments.length} files to item ${item.id}...`);
       try {
@@ -449,43 +449,24 @@ export class MondayAPI {
       console.log(`  ├─ Type: ${mimeType}`);
       console.log(`  └─ Name: ${file.name}`);
 
-      // First create an update to attach the file to
-      console.log('  Creating update for file attachment...');
-      const createUpdateMutation = `
-        mutation {
-          create_update(
-            item_id: ${parseInt(itemId)},
-            body: "📎 ${file.name}"
-          ) {
-            id
-          }
-        }
-      `;
-
-      const updateResult = await this.query(createUpdateMutation);
-      
-      if (!updateResult.create_update || !updateResult.create_update.id) {
-        throw new Error('Failed to create update for file');
-      }
-
-      const updateId = parseInt(updateResult.create_update.id);
-      console.log(`  ✓ Update created: ${updateId}`);
-
-      // Now attach file to the update
+      // Upload file directly to item's Files section
+      // Using add_file_to_item mutation
       const formData = new FormData();
       
       const query = `mutation { 
-        add_file_to_update(update_id: ${updateId}) { 
+        add_file_to_item(item_id: ${parseInt(itemId)}) { 
           id 
           name
           url
+          file_extension
+          file_size
         } 
       }`;
       
       formData.append('query', query);
       formData.append('file', blob, file.name);
       
-      console.log('  Uploading file to Monday.com...');
+      console.log('  Uploading file directly to item Files section...');
       
       const response = await fetch('https://api.monday.com/v2/file', {
         method: 'POST',
@@ -512,13 +493,13 @@ export class MondayAPI {
         throw new Error(error.message);
       }
 
-      if (!result.data || !result.data.add_file_to_update) {
+      if (!result.data || !result.data.add_file_to_item) {
         console.error('  ❌ No file data returned:', result);
         throw new Error('Upload succeeded but no file data returned');
       }
 
       console.log(`  ✅ File uploaded successfully!`);
-      console.log(`  └─ URL: ${result.data.add_file_to_update.url}`);
+      console.log(`  └─ URL: ${result.data.add_file_to_item.url}`);
       return result;
 
     } catch (error) {
