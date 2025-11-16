@@ -27,10 +27,9 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 20px 24px;
-  background: linear-gradient(135deg, #0D6391 0%, #0D6391 85%, #EB8634 100%);
+  background: #0D6391;
   color: white;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  border-bottom: 3px solid #EB8634;
 }
 
 .modal-header h2 {
@@ -39,8 +38,8 @@ body {
 }
 
 .close-btn {
-  background: rgba(235, 134, 52, 0.3);
-  border: 1px solid rgba(235, 134, 52, 0.5);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 4px;
   width: 32px;
   height: 32px;
@@ -52,9 +51,8 @@ body {
 }
 
 .close-btn:hover {
-  background: #EB8634;
-  border-color: #EB8634;
-  transform: scale(1.1);
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
 /* Body */
@@ -120,9 +118,7 @@ body {
   font-size: 16px;
   font-weight: 600;
   margin-bottom: 16px;
-  color: #EB8634;
-  border-bottom: 2px solid #EB8634;
-  padding-bottom: 8px;
+  color: #24292e;
 }
 
 .attachment-section {
@@ -143,7 +139,7 @@ body {
 .section-header h4 {
   font-size: 14px;
   font-weight: 600;
-  color: #EB8634;
+  color: #24292e;
 }
 
 .checkbox-label {
@@ -186,7 +182,7 @@ body {
   align-items: center;
   gap: 6px;
   padding: 6px 12px;
-  background: linear-gradient(135deg, #0D6391 0%, #EB8634 100%);
+  background: #0D6391;
   color: white;
   border: none;
   border-radius: 6px;
@@ -197,8 +193,8 @@ body {
 }
 
 .screenshot-btn:hover {
-  transform: scale(1.05);
-  box-shadow: 0 2px 8px rgba(235, 134, 52, 0.4);
+  background: #0B5275;
+  box-shadow: 0 2px 8px rgba(13, 99, 145, 0.3);
 }
 
 .screenshot-btn:disabled {
@@ -456,7 +452,7 @@ body {
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #0D6391 0%, #EB8634 100%);
+  background: #0D6391;
   transition: width 0.3s;
   width: 0%;
 }
@@ -497,13 +493,13 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: linear-gradient(135deg, #0D6391 0%, #EB8634 100%);
+  background: #0D6391;
   color: white;
 }
 
 .submit-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(235, 134, 52, 0.5);
+  box-shadow: 0 4px 12px rgba(235, 134, 52, 0.3);
 }
 
 .submit-btn:disabled {
