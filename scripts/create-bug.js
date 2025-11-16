@@ -677,28 +677,35 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       chrome.runtime.sendMessage(
         { action: 'captureHAR', tabId: tab.id, timeframeMinutes: 10 },
-        (response) => {
+        async (response) => {
           if (response.success) {
-            // Convert HAR to file
+            // Convert HAR to file with proper data URL
             const harJson = JSON.stringify(response.har, null, 2);
             const harBlob = new Blob([harJson], { type: 'application/json' });
-            const harDataUrl = URL.createObjectURL(harBlob);
             
-            const tabTitle = tab.title.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-            
-            const harFile = {
-              id: `har-${Date.now()}`,
-              name: `bug-${timestamp}-${tabTitle}.har`,
-              dataUrl: harDataUrl,
-              type: 'application/json',
-              size: harBlob.size
-            };
+            // Convert blob to data URL using FileReader (not URL.createObjectURL)
+            const reader = new FileReader();
+            reader.onload = (e) => {
+              const tabTitle = tab.title.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+              const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+              
+              const harFile = {
+                id: `har-${Date.now()}`,
+                name: `bug-${timestamp}-${tabTitle}.har`,
+                dataUrl: e.target.result, // This is now a proper data URL
+                type: 'application/json',
+                size: harBlob.size
+              };
 
-            attachedFiles.push(harFile);
-            harCaptured = true;
-            
-            harStatus.innerHTML = '<span class="status-icon">✅</span><span>HAR captured</span>';
+              attachedFiles.push(harFile);
+              harCaptured = true;
+              
+              harStatus.innerHTML = '<span class="status-icon">✅</span><span>HAR captured</span>';
+            };
+            reader.onerror = () => {
+              harStatus.innerHTML = '<span class="status-icon">❌</span><span>HAR capture failed</span>';
+            };
+            reader.readAsDataURL(harBlob);
           } else {
             harStatus.innerHTML = '<span class="status-icon">❌</span><span>HAR capture failed</span>';
           }
