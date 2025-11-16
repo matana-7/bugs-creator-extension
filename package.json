@@ -1,16 +1,17 @@
 {
-  "name": "bug-reporter-monday",
+  "name": "anti-bugs",
   "version": "1.0.0",
-  "description": "Chrome extension for reporting bugs to Monday.com with HAR capture and screenshot annotation",
+  "description": "Anti Bugs - Track and eliminate bugs efficiently with Monday.com integration, HAR capture, and screenshot annotation",
   "author": "Your Name",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/bug-reporter-extension"
+    "url": "https://github.com/yourusername/anti-bugs"
   },
   "keywords": [
     "chrome-extension",
-    "bug-reporter",
+    "anti-bugs",
+    "bug-tracking",
     "monday.com",
     "har-capture",
     "screenshot-annotation",

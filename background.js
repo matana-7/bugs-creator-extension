@@ -1,4 +1,4 @@
-// Background Service Worker for Bug Reporter Extension
+// Background Service Worker for Anti Bugs Extension
 // Handles HAR capture via chrome.debugger, message routing, and state management
 
 import { HARCapture } from './modules/har-capture.js';
@@ -245,4 +245,4 @@ chrome.runtime.onSuspend.addListener(() => {
   harCapture.cleanup();
 });
 
-console.log('Bug Reporter background service worker loaded');
+console.log('Anti Bugs background service worker loaded');

@@ -164,7 +164,7 @@ export class HARCapture {
       log: {
         version: '1.2',
         creator: {
-          name: 'Bug Reporter Extension',
+          name: 'Anti Bugs',
           version: '1.0.0'
         },
         browser: {

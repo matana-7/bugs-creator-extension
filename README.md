@@ -1,6 +1,6 @@
-# Bug Reporter for Monday.com
+# Anti Bugs
 
-A Chrome browser extension (Manifest V3) that enables fast and comprehensive bug reporting from your browser directly to Monday.com. Capture network logs (HAR), take annotated screenshots, and attach files—all in one seamless workflow.
+A Chrome browser extension (Manifest V3) that helps you track and eliminate bugs efficiently. Seamlessly integrates with Monday.com to enable fast and comprehensive bug reporting from your browser. Capture network logs (HAR), take annotated screenshots, and attach files—all in one seamless workflow.
 
 ![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
@@ -94,7 +94,7 @@ A Chrome browser extension (Manifest V3) that enables fast and comprehensive bug
 
 4. **Verify installation**
    
-   You should see the Bug Reporter icon in your Chrome toolbar.
+   You should see the Anti Bugs icon in your Chrome toolbar.
 
 ### For End Users (Chrome Web Store)
 
@@ -112,7 +112,7 @@ A Chrome browser extension (Manifest V3) that enables fast and comprehensive bug
 
 ### 2. Configure the Extension
 
-1. Click the Bug Reporter icon in Chrome toolbar
+1. Click the Anti Bugs icon in Chrome toolbar
 2. Click the **Settings** gear icon
 3. Paste your Monday.com API token
 4. Click **Test Connection** to verify
@@ -143,7 +143,7 @@ A Chrome browser extension (Manifest V3) that enables fast and comprehensive bug
 
 ### Viewing Recent Bugs
 
-1. Click the Bug Reporter icon in Chrome toolbar
+1. Click the Anti Bugs icon in Chrome toolbar
 2. The popup shows recent bugs from your configured Monday board/group
 3. Click any bug to open it in Monday.com
 
@@ -266,7 +266,7 @@ The extension requires these Chrome permissions:
 #### 2. HAR Capture Test
 - [ ] Navigate to a website (e.g., https://example.com)
 - [ ] Perform some actions (click links, submit forms)
-- [ ] Open Bug Reporter → Create New Bug
+- [ ] Open Anti Bugs → Create New Bug
 - [ ] Ensure "Auto-attach HAR" is checked
 - [ ] Fill required fields
 - [ ] Submit bug
@@ -442,4 +442,4 @@ For issues, questions, or feature requests:
 - Regularly rotate your API tokens
 - Only install from trusted sources
 
-**Happy Bug Hunting! 🐛🔍**
+**Stay bug-free with Anti Bugs! 🐛🚫**

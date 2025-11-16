@@ -62,12 +62,12 @@ body {
 
 .tool-btn:hover {
   background: #f6f8fa;
-  border-color: #667eea;
+  border-color: #EB8634;
 }
 
 .tool-btn.active {
-  background: #667eea;
-  border-color: #667eea;
+  background: #0D6391;
+  border-color: #0D6391;
   color: white;
 }
 
@@ -101,7 +101,7 @@ body {
 }
 
 .color-preview:hover {
-  border-color: #667eea;
+  border-color: #EB8634;
 }
 
 /* Line Width */
@@ -149,13 +149,13 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #0D6391;
   color: white;
 }
 
 .save-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 4px 12px rgba(13, 99, 145, 0.4);
 }
 
 /* Canvas Container */

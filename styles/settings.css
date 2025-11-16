@@ -23,7 +23,7 @@ body {
 
 /* Header */
 .settings-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #0D6391;
   color: white;
   padding: 32px 24px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -111,8 +111,8 @@ body {
 .form-group input:focus,
 .form-group select:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: #EB8634;
+  box-shadow: 0 0 0 3px rgba(235, 134, 52, 0.1);
 }
 
 /* Board Search */
@@ -206,8 +206,8 @@ body {
   display: inline-block;
   width: 14px;
   height: 14px;
-  border: 2px solid rgba(102, 126, 234, 0.3);
-  border-top-color: #667eea;
+  border: 2px solid rgba(235, 134, 52, 0.3);
+  border-top-color: #EB8634;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -225,7 +225,7 @@ select optgroup {
 
 #boardCount {
   margin-top: 6px;
-  color: #667eea;
+  color: #EB8634;
   font-weight: 500;
 }
 
@@ -250,7 +250,7 @@ select optgroup {
 
 .toggle-visibility:hover {
   background: #f6f8fa;
-  border-color: #667eea;
+  border-color: #EB8634;
 }
 
 /* Checkbox Labels */
@@ -277,7 +277,7 @@ select optgroup {
 }
 
 .help-text a {
-  color: #667eea;
+  color: #0D6391;
   text-decoration: none;
 }
 
@@ -305,13 +305,13 @@ select optgroup {
 }
 
 .primary-btn {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #0D6391;
   color: white;
 }
 
 .primary-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 4px 12px rgba(13, 99, 145, 0.4);
 }
 
 .primary-btn:disabled {
@@ -328,7 +328,7 @@ select optgroup {
 
 .secondary-btn:hover {
   background: #f6f8fa;
-  border-color: #667eea;
+  border-color: #EB8634;
 }
 
 .danger-btn {
@@ -387,7 +387,7 @@ select optgroup {
 }
 
 .settings-footer a {
-  color: #667eea;
+  color: #0D6391;
   text-decoration: none;
 }
 

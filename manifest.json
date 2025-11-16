@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Bug Reporter for Monday.com",
+  "name": "Anti Bugs",
   "version": "1.4.0",
-  "description": "Report bugs directly from your browser to Monday.com with HAR capture, screenshots, and annotations",
+  "description": "Track and eliminate bugs efficiently with Anti Bugs - direct integration with Monday.com, including HAR capture, screenshots, and annotations",
   "permissions": [
     "activeTab",
     "scripting",

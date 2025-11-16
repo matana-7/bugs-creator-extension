@@ -28,7 +28,7 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 16px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #0D6391;
   color: white;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
@@ -118,8 +118,8 @@ body {
 
 .search-input:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: #EB8634;
+  box-shadow: 0 0 0 3px rgba(235, 134, 52, 0.1);
 }
 
 .search-input::placeholder {
@@ -177,8 +177,8 @@ body {
 }
 
 .bug-item:hover {
-  border-color: #667eea;
-  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.15);
+  border-color: #EB8634;
+  box-shadow: 0 2px 8px rgba(235, 134, 52, 0.15);
   transform: translateY(-1px);
 }
 
@@ -242,7 +242,7 @@ body {
   justify-content: center;
   gap: 8px;
   padding: 12px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #0D6391;
   color: white;
   border: none;
   border-radius: 8px;
@@ -254,7 +254,7 @@ body {
 
 .create-bug-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 4px 12px rgba(13, 99, 145, 0.4);
 }
 
 .create-bug-btn:active {
